@@ -3,136 +3,120 @@
 import { useState, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { CreateContactModal } from "@/components/create-contact-modal"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { CreateContactModal } from "./create-contact-modal"
+import { useAppSelector, useAppDispatch } from "@/lib/store/hooks"
+import { deleteContact, deleteContacts } from "@/lib/store/slices/contactsSlice"
+import { toast } from "sonner"
 import {
   Search,
-  ChevronDown,
-  MoreHorizontal,
-  Plus,
   Filter,
+  Download,
+  MoreHorizontal,
+  ChevronDown,
   ArrowUpDown,
-  ChevronLeft,
-  ChevronRight,
-  Shield,
-  X,
   ArrowUp,
   ArrowDown,
+  Trash2,
+  Edit,
+  Eye,
+  Mail,
+  Phone,
+  Calendar,
+  Plus,
 } from "lucide-react"
 
-const mockContacts = [
-  {
-    id: "1",
-    name: "TestUser test",
-    email: "t@hubspot.com",
-    phone: "--",
-    leadStatus: "New",
-    favoriteContent: "Marketing",
-    avatar: "T",
-    owner: "John Doe",
-    createDate: "2024-01-15",
-    lastActivity: "2024-01-20",
-  },
-  {
-    id: "2",
-    name: "Brian Halligan (Sample Contact)",
-    email: "bh@hubspot.com",
-    phone: "+1-555-0123",
-    leadStatus: "Qualified",
-    favoriteContent: "Sales",
-    avatar: "B",
-    owner: "Jane Smith",
-    createDate: "2024-01-10",
-    lastActivity: "2024-01-18",
-  },
-  {
-    id: "3",
-    name: "Maria Johnson (Sample Contact)",
-    email: "emailmaria@hubspot.com",
-    phone: "+1-555-0456",
-    leadStatus: "Customer",
-    favoriteContent: "Support",
-    avatar: "M",
-    owner: "Bob Wilson",
-    createDate: "2024-01-05",
-    lastActivity: "2024-01-22",
-  },
-]
-
-const filterTabs = [
-  { id: "all", label: "All contacts", count: 3 },
-  { id: "newsletter", label: "Newsletter subscribers", count: 1 },
-  { id: "unsubscribed", label: "Unsubscribed", count: 0 },
-  { id: "customers", label: "All customers", count: 1 },
-]
-
-type SortField = "name" | "email" | "phone" | "leadStatus" | "favoriteContent"
+type SortField = "name" | "email" | "company" | "jobTitle" | "leadStatus" | "owner" | "createDate" | "lastActivity"
 type SortDirection = "asc" | "desc"
 
 export function ContactsPage() {
+  const dispatch = useAppDispatch()
+  const { contacts } = useAppSelector((state) => state.contacts)
+
+  const [searchTerm, setSearchTerm] = useState("")
   const [selectedContacts, setSelectedContacts] = useState<string[]>([])
-  const [showCreateModal, setShowCreateModal] = useState(false)
-  const [activeTab, setActiveTab] = useState("all")
-  const [searchQuery, setSearchQuery] = useState("")
-  const [sortField, setSortField] = useState<SortField>("name")
-  const [sortDirection, setSortDirection] = useState<SortDirection>("asc")
-  const [currentPage, setCurrentPage] = useState(1)
-  const [itemsPerPage, setItemsPerPage] = useState(25)
-  const [filters, setFilters] = useState({
-    owner: "all",
-    createDate: "all",
-    lastActivity: "all",
-    leadStatus: "all",
-  })
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
+  const [activeFilter, setActiveFilter] = useState("All contacts")
+  const [sortField, setSortField] = useState<SortField>("createDate")
+  const [sortDirection, setSortDirection] = useState<SortDirection>("desc")
 
   // Filter and search contacts
   const filteredContacts = useMemo(() => {
-    let filtered = mockContacts
+    let filtered = [...contacts]
 
-    // Apply tab filter
-    if (activeTab === "newsletter") {
-      filtered = filtered.filter((contact) => contact.favoriteContent === "Marketing")
-    } else if (activeTab === "customers") {
-      filtered = filtered.filter((contact) => contact.leadStatus === "Customer")
-    } else if (activeTab === "unsubscribed") {
-      filtered = []
-    }
-
-    // Apply search
-    if (searchQuery) {
+    // Apply search filter
+    if (searchTerm) {
       filtered = filtered.filter(
         (contact) =>
-          contact.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          contact.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          contact.phone.toLowerCase().includes(searchQuery.toLowerCase()),
+          contact.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          contact.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          contact.company?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          contact.jobTitle?.toLowerCase().includes(searchTerm.toLowerCase()),
       )
     }
 
-    // Apply filters
-    if (filters.leadStatus !== "all") {
-      filtered = filtered.filter((contact) => contact.leadStatus === filters.leadStatus)
+    // Apply status filter
+    if (activeFilter !== "All contacts") {
+      filtered = filtered.filter((contact) => {
+        switch (activeFilter) {
+          case "My contacts":
+            return contact.owner === "Sarah Johnson" // Current user
+          case "Unassigned":
+            return !contact.owner
+          case "Recently created":
+            const createDate = new Date(contact.createDate || "")
+            const weekAgo = new Date()
+            weekAgo.setDate(weekAgo.getDate() - 7)
+            return createDate > weekAgo
+          default:
+            return true
+        }
+      })
     }
 
     // Apply sorting
     filtered.sort((a, b) => {
-      const aValue = a[sortField]
-      const bValue = b[sortField]
-      const modifier = sortDirection === "asc" ? 1 : -1
-      return aValue.localeCompare(bValue) * modifier
+      let aValue = a[sortField] || ""
+      let bValue = b[sortField] || ""
+
+      if (sortField === "createDate" || sortField === "lastActivity") {
+        aValue = new Date(aValue).getTime()
+        bValue = new Date(bValue).getTime()
+      } else {
+        aValue = aValue.toString().toLowerCase()
+        bValue = bValue.toString().toLowerCase()
+      }
+
+      if (sortDirection === "asc") {
+        return aValue < bValue ? -1 : aValue > bValue ? 1 : 0
+      } else {
+        return aValue > bValue ? -1 : aValue < bValue ? 1 : 0
+      }
     })
 
     return filtered
-  }, [activeTab, searchQuery, filters, sortField, sortDirection])
+  }, [contacts, searchTerm, activeFilter, sortField, sortDirection])
 
-  // Pagination
-  const totalPages = Math.ceil(filteredContacts.length / itemsPerPage)
-  const paginatedContacts = filteredContacts.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc")
+    } else {
+      setSortField(field)
+      setSortDirection("asc")
+    }
+  }
+
+  const getSortIcon = (field: SortField) => {
+    if (sortField !== field) return <ArrowUpDown className="w-4 h-4" />
+    return sortDirection === "asc" ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />
+  }
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelectedContacts(paginatedContacts.map((c) => c.id))
+      setSelectedContacts(filteredContacts.map((contact) => contact.id))
     } else {
       setSelectedContacts([])
     }
@@ -146,387 +130,277 @@ export function ContactsPage() {
     }
   }
 
-  const handleSort = (field: SortField) => {
-    if (sortField === field) {
-      setSortDirection(sortDirection === "asc" ? "desc" : "asc")
-    } else {
-      setSortField(field)
-      setSortDirection("asc")
-    }
+  const handleDeleteSelected = () => {
+    if (selectedContacts.length === 0) return
+
+    dispatch(deleteContacts(selectedContacts))
+    setSelectedContacts([])
+    toast.success(`${selectedContacts.length} contact(s) deleted successfully`)
   }
 
-  const handleExport = () => {
+  const handleDeleteContact = (contactId: string) => {
+    dispatch(deleteContact(contactId))
+    setSelectedContacts(selectedContacts.filter((id) => id !== contactId))
+    toast.success("Contact deleted successfully")
+  }
+
+  const handleExportContacts = () => {
     const csvContent = [
-      ["Name", "Email", "Phone", "Lead Status", "Favorite Content"],
+      ["Name", "Email", "Phone", "Company", "Job Title", "Lead Status", "Owner", "Create Date"],
       ...filteredContacts.map((contact) => [
         contact.name,
         contact.email,
-        contact.phone,
-        contact.leadStatus,
-        contact.favoriteContent,
+        contact.phone || "",
+        contact.company || "",
+        contact.jobTitle || "",
+        contact.leadStatus || "",
+        contact.owner || "",
+        contact.createDate || "",
       ]),
     ]
       .map((row) => row.join(","))
       .join("\n")
 
     const blob = new Blob([csvContent], { type: "text/csv" })
-    const url = URL.createObjectURL(blob)
+    const url = window.URL.createObjectURL(blob)
     const a = document.createElement("a")
     a.href = url
     a.download = "contacts.csv"
     a.click()
+    window.URL.revokeObjectURL(url)
+    toast.success("Contacts exported successfully")
   }
 
-  const getSortIcon = (field: SortField) => {
-    if (sortField !== field) return <ArrowUpDown className="w-4 h-4" />
-    return sortDirection === "asc" ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />
+  const getLeadStatusBadge = (status: string) => {
+    const statusColors = {
+      New: "bg-blue-100 text-blue-800",
+      Qualified: "bg-green-100 text-green-800",
+      Contacted: "bg-yellow-100 text-yellow-800",
+      Unqualified: "bg-red-100 text-red-800",
+    }
+    return statusColors[status as keyof typeof statusColors] || "bg-gray-100 text-gray-800"
   }
+
+  const filterOptions = [
+    { label: "All contacts", count: contacts.length },
+    { label: "My contacts", count: contacts.filter((c) => c.owner === "Sarah Johnson").length },
+    { label: "Unassigned", count: contacts.filter((c) => !c.owner).length },
+    {
+      label: "Recently created",
+      count: contacts.filter((c) => {
+        const createDate = new Date(c.createDate || "")
+        const weekAgo = new Date()
+        weekAgo.setDate(weekAgo.getDate() - 7)
+        return createDate > weekAgo
+      }).length,
+    },
+  ]
 
   return (
-    <div className="flex-1 bg-white w-full min-w-0">
+    <div className="p-6 space-y-6">
       {/* Header */}
-      <div className="p-6 border-b w-full">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-2">
-            <h1 className="hubspot-heading-2">Contacts</h1>
-            <ChevronDown className="w-5 h-5 text-gray-500" />
-            <span className="hubspot-small-text text-gray-500">{filteredContacts.length} records</span>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <Button
-              variant="outline"
-              size="sm"
-              className="flex items-center gap-2 bg-transparent text-blue-600 hubspot-body-text"
-            >
-              <Shield className="w-4 h-4" />
-              Data Quality
-            </Button>
-
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="flex items-center gap-2 bg-transparent hubspot-body-text"
-                >
-                  Actions
-                  <ChevronDown className="w-4 h-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuItem>Edit properties</DropdownMenuItem>
-                <DropdownMenuItem>Manage duplicates</DropdownMenuItem>
-                <DropdownMenuItem>Fix formatting issues</DropdownMenuItem>
-                <DropdownMenuItem>Restore records</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            <Button variant="outline" size="sm" className="hubspot-body-text bg-transparent">
-              Import
-            </Button>
-
-            <Button
-              size="sm"
-              className="bg-orange-500 hover:bg-orange-600 hubspot-body-text font-medium"
-              onClick={() => setShowCreateModal(true)}
-            >
-              Create contact
-            </Button>
-          </div>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="hubspot-heading-1">Contacts</h1>
+          <p className="hubspot-body-text mt-1">Manage and organize your contacts</p>
         </div>
+        <Button onClick={() => setIsCreateModalOpen(true)} className="bg-orange-500 hover:bg-orange-600">
+          <Plus className="w-4 h-4 mr-2" />
+          Create contact
+        </Button>
+      </div>
 
-        {/* Filter Tabs */}
-        <div className="flex items-center gap-1 mb-6">
-          {filterTabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`px-4 py-2 hubspot-body-text rounded-md transition-colors flex items-center gap-2 ${
-                activeTab === tab.id
-                  ? "bg-blue-50 text-blue-700 border border-blue-200"
-                  : "text-gray-600 hover:bg-gray-50"
-              }`}
-            >
-              {tab.label}
-              {activeTab === tab.id && tab.id === "all" && <X className="w-4 h-4" />}
-            </button>
-          ))}
-
-          <Button
-            variant="outline"
-            size="sm"
-            className="ml-4 text-blue-600 border-blue-200 bg-transparent hubspot-body-text"
+      {/* Filters */}
+      <div className="flex items-center gap-4 pb-4 border-b">
+        {filterOptions.map((option) => (
+          <button
+            key={option.label}
+            onClick={() => setActiveFilter(option.label)}
+            className={`px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+              activeFilter === option.label
+                ? "bg-orange-100 text-orange-700 border border-orange-200"
+                : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+            }`}
           >
-            <Plus className="w-4 h-4 mr-1" />
-            Add view (4/5)
-          </Button>
+            {option.label} ({option.count})
+          </button>
+        ))}
+      </div>
 
-          <Button variant="ghost" size="sm" className="text-blue-600 hubspot-body-text">
-            All Views
-          </Button>
+      {/* Search and Actions */}
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-4 flex-1">
+          <div className="relative max-w-md">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <Input
+              placeholder="Search contacts..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm">
+                <Filter className="w-4 h-4 mr-2" />
+                Filter
+                <ChevronDown className="w-4 h-4 ml-2" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem>Lead Status</DropdownMenuItem>
+              <DropdownMenuItem>Lifecycle Stage</DropdownMenuItem>
+              <DropdownMenuItem>Owner</DropdownMenuItem>
+              <DropdownMenuItem>Create Date</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
-        {/* Filters and Search */}
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-4">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="flex items-center gap-2 bg-transparent text-blue-600 hubspot-body-text"
-                >
-                  Contact owner
-                  <ChevronDown className="w-4 h-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuItem onClick={() => setFilters({ ...filters, owner: "all" })}>All owners</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setFilters({ ...filters, owner: "me" })}>
-                  Assigned to me
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="flex items-center gap-2 bg-transparent text-blue-600 hubspot-body-text"
-                >
-                  Create date
-                  <ChevronDown className="w-4 h-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuItem onClick={() => setFilters({ ...filters, createDate: "all" })}>
-                  All time
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setFilters({ ...filters, createDate: "30days" })}>
-                  Last 30 days
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="flex items-center gap-2 bg-transparent text-blue-600 hubspot-body-text"
-                >
-                  Last activity date
-                  <ChevronDown className="w-4 h-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuItem onClick={() => setFilters({ ...filters, lastActivity: "all" })}>
-                  All time
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setFilters({ ...filters, lastActivity: "30days" })}>
-                  Last 30 days
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="flex items-center gap-2 bg-transparent text-blue-600 hubspot-body-text"
-                >
-                  Lead status
-                  <ChevronDown className="w-4 h-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuItem onClick={() => setFilters({ ...filters, leadStatus: "all" })}>
-                  All statuses
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setFilters({ ...filters, leadStatus: "New" })}>New</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setFilters({ ...filters, leadStatus: "Qualified" })}>
-                  Qualified
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setFilters({ ...filters, leadStatus: "Customer" })}>
-                  Customer
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-
+        <div className="flex items-center gap-2">
+          {selectedContacts.length > 0 && (
             <Button
               variant="outline"
               size="sm"
-              className="flex items-center gap-2 bg-transparent text-blue-600 hubspot-body-text"
+              onClick={handleDeleteSelected}
+              className="text-red-600 hover:text-red-700 bg-transparent"
             >
-              <Plus className="w-4 h-4" />
-              More
+              <Trash2 className="w-4 h-4 mr-2" />
+              Delete ({selectedContacts.length})
             </Button>
-
-            <Button
-              variant="outline"
-              size="sm"
-              className="flex items-center gap-2 bg-transparent text-blue-600 hubspot-body-text"
-            >
-              <Filter className="w-4 h-4" />
-              Advanced filters
-            </Button>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={handleExport} className="hubspot-body-text bg-transparent">
-              Export
-            </Button>
-            <Button variant="outline" size="sm" className="hubspot-body-text bg-transparent">
-              Edit columns
-            </Button>
-          </div>
-        </div>
-
-        {/* Search */}
-        <div className="relative max-w-md">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-          <Input
-            placeholder="Search name, phone, email"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 hubspot-body-text"
-          />
+          )}
+          <Button variant="outline" size="sm" onClick={handleExportContacts}>
+            <Download className="w-4 h-4 mr-2" />
+            Export
+          </Button>
         </div>
       </div>
 
       {/* Table */}
-      <div className="overflow-x-auto w-full">
-        <Table className="w-full">
+      <div className="border rounded-lg">
+        <Table>
           <TableHeader>
-            <TableRow className="border-b">
+            <TableRow>
               <TableHead className="w-12">
                 <Checkbox
-                  checked={
-                    paginatedContacts.length > 0 &&
-                    paginatedContacts.every((contact) => selectedContacts.includes(contact.id))
-                  }
+                  checked={selectedContacts.length === filteredContacts.length && filteredContacts.length > 0}
                   onCheckedChange={handleSelectAll}
                 />
               </TableHead>
               <TableHead>
-                <div className="flex items-center gap-2">
-                  <span className="hubspot-small-text font-semibold text-gray-700 uppercase tracking-wide">NAME</span>
-                  <button onClick={() => handleSort("name")}>{getSortIcon("name")}</button>
-                  <MoreHorizontal className="w-4 h-4" />
-                </div>
+                <Button variant="ghost" onClick={() => handleSort("name")} className="h-auto p-0 font-medium">
+                  Name {getSortIcon("name")}
+                </Button>
               </TableHead>
               <TableHead>
-                <div className="flex items-center gap-2">
-                  <span className="hubspot-small-text font-semibold text-gray-700 uppercase tracking-wide">EMAIL</span>
-                  <button onClick={() => handleSort("email")}>{getSortIcon("email")}</button>
-                  <MoreHorizontal className="w-4 h-4" />
-                </div>
+                <Button variant="ghost" onClick={() => handleSort("email")} className="h-auto p-0 font-medium">
+                  Email {getSortIcon("email")}
+                </Button>
+              </TableHead>
+              <TableHead>Phone</TableHead>
+              <TableHead>
+                <Button variant="ghost" onClick={() => handleSort("company")} className="h-auto p-0 font-medium">
+                  Company {getSortIcon("company")}
+                </Button>
               </TableHead>
               <TableHead>
-                <div className="flex items-center gap-2">
-                  <span className="hubspot-small-text font-semibold text-gray-700 uppercase tracking-wide">
-                    PHONE NUMBER
-                  </span>
-                  <button onClick={() => handleSort("phone")}>{getSortIcon("phone")}</button>
-                  <MoreHorizontal className="w-4 h-4" />
-                </div>
+                <Button variant="ghost" onClick={() => handleSort("jobTitle")} className="h-auto p-0 font-medium">
+                  Job Title {getSortIcon("jobTitle")}
+                </Button>
               </TableHead>
               <TableHead>
-                <div className="flex items-center gap-2">
-                  <span className="hubspot-small-text font-semibold text-gray-700 uppercase tracking-wide">
-                    LEAD STATUS
-                  </span>
-                  <button onClick={() => handleSort("leadStatus")}>{getSortIcon("leadStatus")}</button>
-                  <MoreHorizontal className="w-4 h-4" />
-                </div>
+                <Button variant="ghost" onClick={() => handleSort("leadStatus")} className="h-auto p-0 font-medium">
+                  Lead Status {getSortIcon("leadStatus")}
+                </Button>
               </TableHead>
               <TableHead>
-                <div className="flex items-center gap-2">
-                  <span className="hubspot-small-text font-semibold text-gray-700 uppercase tracking-wide">
-                    FAVORITE CONTENT TOPIC
-                  </span>
-                  <button onClick={() => handleSort("favoriteContent")}>{getSortIcon("favoriteContent")}</button>
-                  <MoreHorizontal className="w-4 h-4" />
-                </div>
+                <Button variant="ghost" onClick={() => handleSort("owner")} className="h-auto p-0 font-medium">
+                  Owner {getSortIcon("owner")}
+                </Button>
               </TableHead>
+              <TableHead>
+                <Button variant="ghost" onClick={() => handleSort("createDate")} className="h-auto p-0 font-medium">
+                  Create Date {getSortIcon("createDate")}
+                </Button>
+              </TableHead>
+              <TableHead className="w-12"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {paginatedContacts.map((contact) => (
-              <TableRow key={contact.id} className="hover:bg-gray-50">
+            {filteredContacts.map((contact) => (
+              <TableRow key={contact.id}>
                 <TableCell>
                   <Checkbox
                     checked={selectedContacts.includes(contact.id)}
                     onCheckedChange={(checked) => handleSelectContact(contact.id, checked as boolean)}
                   />
                 </TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center text-white text-sm font-semibold">
-                      {contact.avatar}
+                <TableCell className="font-medium">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                      {contact.name.charAt(0)}
                     </div>
-                    <span className="hubspot-link cursor-pointer">{contact.name}</span>
+                    {contact.name}
                   </div>
                 </TableCell>
+                <TableCell>{contact.email}</TableCell>
+                <TableCell>{contact.phone || "-"}</TableCell>
+                <TableCell>{contact.company || "-"}</TableCell>
+                <TableCell>{contact.jobTitle || "-"}</TableCell>
                 <TableCell>
-                  <span className="hubspot-link cursor-pointer">{contact.email}</span>
+                  {contact.leadStatus && (
+                    <Badge className={getLeadStatusBadge(contact.leadStatus)}>{contact.leadStatus}</Badge>
+                  )}
                 </TableCell>
-                <TableCell className="hubspot-body-text text-gray-500">{contact.phone}</TableCell>
-                <TableCell className="hubspot-body-text text-gray-500">{contact.leadStatus}</TableCell>
-                <TableCell className="hubspot-body-text text-gray-500">{contact.favoriteContent}</TableCell>
+                <TableCell>{contact.owner || "Unassigned"}</TableCell>
+                <TableCell>{contact.createDate || "-"}</TableCell>
+                <TableCell>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="sm">
+                        <MoreHorizontal className="w-4 h-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem>
+                        <Eye className="w-4 h-4 mr-2" />
+                        View
+                      </DropdownMenuItem>
+                      <DropdownMenuItem>
+                        <Edit className="w-4 h-4 mr-2" />
+                        Edit
+                      </DropdownMenuItem>
+                      <DropdownMenuItem>
+                        <Mail className="w-4 h-4 mr-2" />
+                        Send email
+                      </DropdownMenuItem>
+                      <DropdownMenuItem>
+                        <Phone className="w-4 h-4 mr-2" />
+                        Call
+                      </DropdownMenuItem>
+                      <DropdownMenuItem>
+                        <Calendar className="w-4 h-4 mr-2" />
+                        Schedule meeting
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleDeleteContact(contact.id)} className="text-red-600">
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Delete
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
       </div>
 
-      {/* Pagination */}
-      <div className="flex items-center justify-between p-4 border-t">
-        <div className="flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            disabled={currentPage === 1}
-            onClick={() => setCurrentPage(currentPage - 1)}
-            className="hubspot-body-text"
-          >
-            <ChevronLeft className="w-4 h-4" />
-            Prev
-          </Button>
-          <Button variant="ghost" size="sm" className="bg-blue-50 text-blue-600 hubspot-body-text">
-            {currentPage}
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            disabled={currentPage === totalPages}
-            onClick={() => setCurrentPage(currentPage + 1)}
-            className="hubspot-body-text"
-          >
-            Next
-            <ChevronRight className="w-4 h-4" />
-          </Button>
+      {filteredContacts.length === 0 && (
+        <div className="text-center py-12">
+          <p className="text-gray-500">No contacts found matching your criteria.</p>
         </div>
+      )}
 
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm" className="flex items-center gap-2 hubspot-body-text">
-              {itemsPerPage} per page
-              <ChevronDown className="w-4 h-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent>
-            <DropdownMenuItem onClick={() => setItemsPerPage(25)}>25 per page</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setItemsPerPage(50)}>50 per page</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setItemsPerPage(100)}>100 per page</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-
-      <CreateContactModal open={showCreateModal} onOpenChange={setShowCreateModal} />
+      <CreateContactModal isOpen={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)} />
     </div>
   )
 }

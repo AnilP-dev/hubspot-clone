@@ -29,7 +29,7 @@ import {
   Sparkles,
   ChevronRight,
   Building2,
-  Handshake,
+  Target,
   Ticket,
   List,
   Mail,
@@ -49,7 +49,7 @@ const navigationItems = [
     items: [
       { title: "Contacts", href: "/crm/contacts", icon: Users },
       { title: "Companies", href: "/crm/companies", icon: Building2 },
-      { title: "Deals", href: "/crm/deals", icon: Handshake },
+      { title: "Deals", href: "/crm/deals", icon: Target },
       { title: "Tickets", href: "/crm/tickets", icon: Ticket },
       { title: "Lists", href: "/crm/lists", icon: List },
       { title: "Inbox", href: "/crm/inbox", icon: Mail },
