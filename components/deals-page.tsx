@@ -3,289 +3,408 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Search, ChevronDown, Plus, Filter, ChevronLeft, ChevronRight, List, Grid3X3 } from "lucide-react"
-
-const filterTabs = [
-  { id: "all", label: "All deals", count: 0 },
-  { id: "my", label: "My deals", count: 0 },
-]
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Badge } from "@/components/ui/badge"
+import {
+  Search,
+  Filter,
+  MoreHorizontal,
+  Plus,
+  Grid3X3,
+  List,
+  Download,
+  ChevronDown,
+  ArrowUpDown,
+  Trash2,
+} from "lucide-react"
+import { useAppSelector, useAppDispatch } from "@/lib/store/hooks"
+import { deleteDeal, deleteDeals } from "@/lib/store/slices/dealsSlice"
+import { CreateDealModal } from "./create-deal-modal"
+import { DealDetailModal } from "./deal-detail-modal"
+import { toast } from "sonner"
 
 export function DealsPage() {
-  const [activeTab, setActiveTab] = useState("all")
-  const [searchQuery, setSearchQuery] = useState("")
-  const [viewMode, setViewMode] = useState("board") // 'board' or 'table'
-  const [currentPage, setCurrentPage] = useState(1)
-  const [itemsPerPage, setItemsPerPage] = useState(25)
+  const dispatch = useAppDispatch()
+  const { deals } = useAppSelector((state) => state.deals)
+  const [selectedDeals, setSelectedDeals] = useState<string[]>([])
+  const [searchTerm, setSearchTerm] = useState("")
+  const [showCreateModal, setShowCreateModal] = useState(false)
+  const [selectedDeal, setSelectedDeal] = useState(null)
+  const [showDetailModal, setShowDetailModal] = useState(false)
+  const [viewMode, setViewMode] = useState<"list" | "grid">("list")
+
+  const filteredDeals = deals.filter(
+    (deal) =>
+      deal.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      deal.stage.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (deal.owner && deal.owner.toLowerCase().includes(searchTerm.toLowerCase())),
+  )
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedDeals(filteredDeals.map((deal) => deal.id))
+    } else {
+      setSelectedDeals([])
+    }
+  }
+
+  const handleSelectDeal = (dealId: string, checked: boolean) => {
+    if (checked) {
+      setSelectedDeals([...selectedDeals, dealId])
+    } else {
+      setSelectedDeals(selectedDeals.filter((id) => id !== dealId))
+    }
+  }
+
+  const handleDeleteSelected = () => {
+    if (selectedDeals.length === 0) return
+
+    dispatch(deleteDeals(selectedDeals))
+    setSelectedDeals([])
+    toast.success(`${selectedDeals.length} deal(s) deleted successfully`)
+  }
+
+  const handleDeleteDeal = (dealId: string) => {
+    dispatch(deleteDeal(dealId))
+    toast.success("Deal deleted successfully")
+  }
+
+  const handleDealClick = (deal: any) => {
+    setSelectedDeal(deal)
+    setShowDetailModal(true)
+  }
+
+  const handleExportDeals = () => {
+    try {
+      // Create CSV headers
+      const headers = ["Deal Name", "Stage", "Amount", "Close Date", "Owner", "Create Date", "Priority", "Type"]
+
+      // Create CSV rows
+      const csvRows = [
+        headers.join(","),
+        ...filteredDeals.map((deal) =>
+          [
+            `"${deal.name || ""}"`,
+            `"${deal.stage || ""}"`,
+            `"${deal.amount || 0}"`,
+            `"${deal.closeDate || ""}"`,
+            `"${deal.owner || ""}"`,
+            `"${deal.createDate || ""}"`,
+            `"${deal.priority || ""}"`,
+            `"${deal.type || ""}"`,
+          ].join(","),
+        ),
+      ]
+
+      // Create and download CSV file
+      const csvContent = csvRows.join("\n")
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
+      const link = document.createElement("a")
+
+      if (link.download !== undefined) {
+        const url = URL.createObjectURL(blob)
+        link.setAttribute("href", url)
+        link.setAttribute("download", "deals.csv")
+        link.style.visibility = "hidden"
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+      }
+
+      toast.success(`Exported ${filteredDeals.length} deals successfully`)
+    } catch (error) {
+      console.error("Export error:", error)
+      toast.error("Failed to export deals")
+    }
+  }
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+    }).format(amount)
+  }
+
+  const getStageColor = (stage: string) => {
+    const colors = {
+      "Appointment Scheduled": "bg-blue-100 text-blue-800",
+      "Qualified To Buy": "bg-green-100 text-green-800",
+      "Presentation Scheduled": "bg-yellow-100 text-yellow-800",
+      "Decision Maker Bought-In": "bg-purple-100 text-purple-800",
+      "Contract Sent": "bg-orange-100 text-orange-800",
+      "Closed Won": "bg-green-100 text-green-800",
+      "Closed Lost": "bg-red-100 text-red-800",
+    }
+    return colors[stage as keyof typeof colors] || "bg-gray-100 text-gray-800"
+  }
 
   return (
-    <div className="flex-1 bg-white w-full min-w-0">
+    <div className="p-6 bg-gray-50 min-h-screen">
       {/* Header */}
-      <div className="p-6 border-b w-full">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-semibold text-gray-900">Deals</h1>
-            <ChevronDown className="w-5 h-5 text-gray-500" />
-            <span className="text-sm text-gray-500">0 records</span>
+      <div className="mb-6">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h1 className="text-2xl font-semibold text-gray-900 flex items-center gap-2">
+              Deals
+              <ChevronDown className="h-5 w-5 text-gray-500" />
+            </h1>
+            <p className="text-sm text-gray-600">
+              {deals.length} record{deals.length !== 1 ? "s" : ""}
+            </p>
           </div>
-
-          <div className="flex items-center gap-3">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="flex items-center gap-2 bg-transparent">
-                  Actions
-                  <ChevronDown className="w-4 h-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuItem>Edit properties</DropdownMenuItem>
-                <DropdownMenuItem>Manage duplicates</DropdownMenuItem>
-                <DropdownMenuItem>Fix formatting issues</DropdownMenuItem>
-                <DropdownMenuItem>Restore records</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            <Button variant="outline" size="sm">
+          <div className="flex items-center gap-2">
+            <Button variant="outline" className="text-orange-600 border-orange-600 hover:bg-orange-50 bg-transparent">
+              Actions
+              <ChevronDown className="h-4 w-4 ml-1" />
+            </Button>
+            <Button variant="outline" className="text-orange-600 border-orange-600 hover:bg-orange-50 bg-transparent">
               Import
             </Button>
-
-            <Button size="sm" className="bg-orange-500 hover:bg-orange-600">
+            <Button onClick={() => setShowCreateModal(true)} className="bg-orange-600 hover:bg-orange-700 text-white">
               Create deal
             </Button>
           </div>
         </div>
 
-        {/* Filter Tabs */}
-        <div className="flex items-center gap-1 mb-6">
-          {filterTabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`px-4 py-2 text-sm rounded-md transition-colors ${
-                activeTab === tab.id
-                  ? "bg-blue-50 text-blue-700 border border-blue-200"
-                  : "text-gray-600 hover:bg-gray-50"
-              }`}
+        {/* Tabs */}
+        <div className="flex items-center gap-4 mb-4">
+          <div className="flex bg-white rounded-lg border border-gray-200">
+            <Button
+              variant="ghost"
+              className="bg-white text-gray-900 border-r border-gray-200 rounded-r-none hover:bg-gray-50"
             >
-              {tab.label}
-            </button>
-          ))}
-
-          <Button variant="outline" size="sm" className="ml-4 text-blue-600 border-blue-200 bg-transparent">
-            <Plus className="w-4 h-4 mr-1" />
+              All deals
+              <button className="ml-2 text-gray-400 hover:text-gray-600">
+                <MoreHorizontal className="h-4 w-4" />
+              </button>
+            </Button>
+            <Button variant="ghost" className="text-gray-600 hover:bg-gray-50 rounded-l-none">
+              My deals
+            </Button>
+          </div>
+          <Button variant="link" className="text-[#00BDA5] p-0">
+            <Plus className="h-4 w-4 mr-1" />
             Add view (2/5)
           </Button>
-
-          <Button variant="ghost" size="sm" className="text-blue-600">
+          <Button variant="link" className="text-[#00BDA5] p-0 ml-auto">
             All Views
           </Button>
         </div>
 
-        {/* View Toggle and Filters */}
+        {/* Filters and Controls */}
         <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center border rounded-md">
+          <div className="flex items-center gap-2">
+            <div className="flex bg-white rounded border border-gray-200">
               <Button
-                variant={viewMode === "board" ? "default" : "ghost"}
+                variant="ghost"
                 size="sm"
-                onClick={() => setViewMode("board")}
-                className="rounded-r-none"
+                className={`p-2 ${viewMode === "list" ? "bg-gray-100" : ""}`}
+                onClick={() => setViewMode("list")}
               >
-                <Grid3X3 className="w-4 h-4" />
+                <List className="h-4 w-4" />
               </Button>
               <Button
-                variant={viewMode === "table" ? "default" : "ghost"}
+                variant="ghost"
                 size="sm"
-                onClick={() => setViewMode("table")}
-                className="rounded-l-none"
+                className={`p-2 ${viewMode === "grid" ? "bg-gray-100" : ""}`}
+                onClick={() => setViewMode("grid")}
               >
-                <List className="w-4 h-4" />
+                <Grid3X3 className="h-4 w-4" />
               </Button>
             </div>
 
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="flex items-center gap-2 bg-transparent text-blue-600">
-                  All pipelines
-                  <ChevronDown className="w-4 h-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuItem>Sales Pipeline</DropdownMenuItem>
-                <DropdownMenuItem>Marketing Pipeline</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <Select defaultValue="deal-owner">
+              <SelectTrigger className="w-40 bg-white">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="deal-owner">Deal owner</SelectItem>
+                <SelectItem value="anil">Anil Kumar Pandiya</SelectItem>
+              </SelectContent>
+            </Select>
 
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="flex items-center gap-2 bg-transparent text-blue-600">
-                  Deal owner
-                  <ChevronDown className="w-4 h-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuItem>All owners</DropdownMenuItem>
-                <DropdownMenuItem>Assigned to me</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <Select defaultValue="create-date">
+              <SelectTrigger className="w-32 bg-white">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="create-date">Create date</SelectItem>
+                <SelectItem value="last-week">Last week</SelectItem>
+              </SelectContent>
+            </Select>
 
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="flex items-center gap-2 bg-transparent text-blue-600">
-                  Create date
-                  <ChevronDown className="w-4 h-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuItem>All time</DropdownMenuItem>
-                <DropdownMenuItem>Last 30 days</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="flex items-center gap-2 bg-transparent text-blue-600">
-                  Last activity date
-                  <ChevronDown className="w-4 h-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuItem>All time</DropdownMenuItem>
-                <DropdownMenuItem>Last 30 days</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="flex items-center gap-2 bg-transparent text-blue-600">
-                  Close date
-                  <ChevronDown className="w-4 h-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuItem>All time</DropdownMenuItem>
-                <DropdownMenuItem>This quarter</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            <Button variant="outline" size="sm" className="flex items-center gap-2 bg-transparent text-blue-600">
-              <Plus className="w-4 h-4" />
+            <Button variant="outline" className="text-[#00BDA5] border-[#00BDA5] hover:bg-[#00BDA5]/5 bg-transparent">
+              <Plus className="h-4 w-4 mr-1" />
               More
             </Button>
 
-            <Button variant="outline" size="sm" className="flex items-center gap-2 bg-transparent text-blue-600">
-              <Filter className="w-4 h-4" />
+            <Button variant="outline" className="text-gray-600 border-gray-300 bg-transparent">
+              <Filter className="h-4 w-4 mr-1" />
               Advanced filters
             </Button>
           </div>
 
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm">
+            <Button
+              onClick={handleExportDeals}
+              variant="outline"
+              size="sm"
+              className="text-gray-600 bg-transparent hover:bg-gray-50"
+            >
+              <Download className="h-4 w-4 mr-1" />
               Export
             </Button>
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" className="text-gray-600 bg-transparent">
               Edit columns
             </Button>
           </div>
         </div>
 
         {/* Search */}
-        <div className="relative max-w-md">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+        <div className="relative mb-4">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
           <Input
-            placeholder="Search name or description"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
+            placeholder="Search deal name, stage, or owner"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10 bg-white border-gray-300 focus:border-[#00BDA5] focus:ring-[#00BDA5]"
           />
         </div>
       </div>
 
-      {/* Empty State */}
-      <div className="flex-1 flex items-center justify-center p-12 w-full">
-        <div className="text-center max-w-md">
-          <div className="mb-6">
-            <div className="w-24 h-24 mx-auto mb-4 bg-orange-100 rounded-lg flex items-center justify-center">
-              <svg className="w-12 h-12 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={1.5}
-                  d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+      {/* Table */}
+      <div className="bg-white rounded-lg border border-gray-200">
+        <Table>
+          <TableHeader>
+            <TableRow className="border-b border-gray-200">
+              <TableHead className="w-12">
+                <Checkbox
+                  checked={selectedDeals.length === filteredDeals.length && filteredDeals.length > 0}
+                  onCheckedChange={handleSelectAll}
                 />
-              </svg>
-            </div>
+              </TableHead>
+              <TableHead className="text-gray-600 font-medium">
+                <div className="flex items-center gap-1">
+                  DEAL NAME
+                  <ArrowUpDown className="h-4 w-4" />
+                  <MoreHorizontal className="h-4 w-4" />
+                </div>
+              </TableHead>
+              <TableHead className="text-gray-600 font-medium">
+                <div className="flex items-center gap-1">
+                  STAGE
+                  <ArrowUpDown className="h-4 w-4" />
+                  <MoreHorizontal className="h-4 w-4" />
+                </div>
+              </TableHead>
+              <TableHead className="text-gray-600 font-medium">
+                <div className="flex items-center gap-1">
+                  AMOUNT
+                  <ArrowUpDown className="h-4 w-4" />
+                  <MoreHorizontal className="h-4 w-4" />
+                </div>
+              </TableHead>
+              <TableHead className="text-gray-600 font-medium">
+                <div className="flex items-center gap-1">
+                  CLOSE DATE
+                  <ArrowUpDown className="h-4 w-4" />
+                  <MoreHorizontal className="h-4 w-4" />
+                </div>
+              </TableHead>
+              <TableHead className="text-gray-600 font-medium">
+                <div className="flex items-center gap-1">
+                  OWNER
+                  <ArrowUpDown className="h-4 w-4" />
+                  <MoreHorizontal className="h-4 w-4" />
+                </div>
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {filteredDeals.map((deal) => (
+              <TableRow key={deal.id} className="border-b border-gray-100 hover:bg-gray-50">
+                <TableCell>
+                  <Checkbox
+                    checked={selectedDeals.includes(deal.id)}
+                    onCheckedChange={(checked) => handleSelectDeal(deal.id, checked as boolean)}
+                  />
+                </TableCell>
+                <TableCell>
+                  <span
+                    className="text-[#00BDA5] hover:underline cursor-pointer font-medium"
+                    onClick={() => handleDealClick(deal)}
+                  >
+                    {deal.name}
+                  </span>
+                </TableCell>
+                <TableCell>
+                  <Badge className={getStageColor(deal.stage)}>{deal.stage}</Badge>
+                </TableCell>
+                <TableCell>
+                  <span className="text-gray-900 font-medium">{formatCurrency(deal.amount)}</span>
+                </TableCell>
+                <TableCell>
+                  <span className="text-gray-900">{deal.closeDate}</span>
+                </TableCell>
+                <TableCell>
+                  <span className="text-gray-900">{deal.owner || "Unassigned"}</span>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+
+        {filteredDeals.length === 0 && (
+          <div className="text-center py-12">
+            <p className="text-gray-500">No deals found</p>
           </div>
+        )}
 
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">
-            Create a deal to start building your winning sales process
-          </h2>
-
-          <div className="space-y-4 text-left">
-            <div className="flex items-start gap-3">
-              <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center text-white text-sm font-semibold mt-0.5">
-                1
-              </div>
-              <div>
-                <p className="font-medium text-gray-900">Set up your deals pipeline</p>
-                <p className="text-sm text-gray-600">with stages for the real-life milestones in your process.</p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-3">
-              <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center text-white text-sm font-semibold mt-0.5">
-                2
-              </div>
-              <div>
-                <p className="font-medium text-gray-900">Track deals</p>
-                <p className="text-sm text-gray-600">
-                  to visualize the progress of your sales and make sure nothing gets lost.
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-3">
-              <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center text-white text-sm font-semibold mt-0.5">
-                3
-              </div>
-              <div>
-                <p className="font-medium text-gray-900">Report on your sales</p>
-                <p className="text-sm text-gray-600">
-                  so you can keep track of how much money you are making over time.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Pagination */}
-      <div className="flex items-center justify-between p-4 border-t">
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="sm" disabled>
-            <ChevronLeft className="w-4 h-4" />
-            Prev
-          </Button>
-          <Button variant="ghost" size="sm" disabled>
-            Next
-            <ChevronRight className="w-4 h-4" />
-          </Button>
-        </div>
-
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm" className="flex items-center gap-2">
-              {itemsPerPage} per page
-              <ChevronDown className="w-4 h-4" />
+        {/* Pagination */}
+        <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200">
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" disabled>
+              Prev
             </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent>
-            <DropdownMenuItem onClick={() => setItemsPerPage(25)}>25 per page</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setItemsPerPage(50)}>50 per page</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setItemsPerPage(100)}>100 per page</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+            <Button variant="outline" size="sm" className="bg-[#00BDA5] text-white border-[#00BDA5]">
+              1
+            </Button>
+            <Button variant="outline" size="sm" disabled>
+              Next
+            </Button>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-600">25 per page</span>
+            <ChevronDown className="h-4 w-4 text-gray-400" />
+          </div>
+        </div>
       </div>
+
+      {/* Delete selected button */}
+      {selectedDeals.length > 0 && (
+        <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2">
+          <div className="bg-white border border-gray-200 rounded-lg shadow-lg px-4 py-2 flex items-center gap-2">
+            <span className="text-sm text-gray-600">{selectedDeals.length} selected</span>
+            <Button
+              onClick={handleDeleteSelected}
+              variant="outline"
+              size="sm"
+              className="text-red-600 border-red-600 hover:bg-red-50 bg-transparent"
+            >
+              <Trash2 className="h-4 w-4 mr-1" />
+              Delete
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Create Deal Modal */}
+      <CreateDealModal open={showCreateModal} onOpenChange={setShowCreateModal} />
+
+      {/* Deal Detail Modal */}
+      <DealDetailModal deal={selectedDeal} open={showDetailModal} onOpenChange={setShowDetailModal} />
     </div>
   )
 }

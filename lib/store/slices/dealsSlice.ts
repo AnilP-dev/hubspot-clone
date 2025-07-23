@@ -3,14 +3,19 @@ import { createSlice, type PayloadAction } from "@reduxjs/toolkit"
 export interface Deal {
   id: string
   name: string
-  amount?: string
-  stage?: string
-  probability?: string
-  closeDate?: string
-  owner?: string
-  company?: string
-  createDate?: string
-  lastActivity?: string
+  amount: string
+  stage: string
+  pipeline: string
+  closeDate: string
+  owner: string
+  dealType: string
+  priority: "Low" | "Medium" | "High"
+  createDate: string
+  lastActivityDate: string
+  associatedContacts: string[]
+  associatedCompanies: string[]
+  recordSource: string
+  lastContacted?: string
 }
 
 interface DealsState {
@@ -23,27 +28,19 @@ const initialState: DealsState = {
   deals: [
     {
       id: "1",
-      name: "Acme Corp - Q1 Deal",
-      amount: "$50,000",
-      stage: "Proposal",
-      probability: "75%",
-      closeDate: "2024-03-31",
-      owner: "Sarah Johnson",
-      company: "Acme Corp",
-      createDate: "2024-01-15",
-      lastActivity: "2 days ago",
-    },
-    {
-      id: "2",
-      name: "TechCorp - Annual Contract",
-      amount: "$25,000",
-      stage: "Negotiation",
-      probability: "50%",
-      closeDate: "2024-02-28",
-      owner: "Mike Wilson",
-      company: "TechCorp",
-      createDate: "2024-01-10",
-      lastActivity: "1 day ago",
+      name: "abc",
+      amount: "$21",
+      stage: "Appointment Scheduled",
+      pipeline: "Sales Pipeline",
+      closeDate: "07/31/2025",
+      owner: "Anil Kumar Pandiya",
+      dealType: "New Business",
+      priority: "Low",
+      createDate: "07/23/2025",
+      lastActivityDate: "--",
+      associatedContacts: ["1"],
+      associatedCompanies: ["1"],
+      recordSource: "CRM UI",
     },
   ],
   loading: false,
@@ -54,12 +51,15 @@ const dealsSlice = createSlice({
   name: "deals",
   initialState,
   reducers: {
-    addDeal: (state, action: PayloadAction<Omit<Deal, "id" | "createDate" | "lastActivity">>) => {
+    addDeal: (state, action: PayloadAction<Omit<Deal, "id" | "createDate">>) => {
       const newDeal: Deal = {
         ...action.payload,
         id: Date.now().toString(),
-        createDate: new Date().toISOString().split("T")[0],
-        lastActivity: "Just now",
+        createDate: new Date().toLocaleDateString("en-US", {
+          month: "2-digit",
+          day: "2-digit",
+          year: "numeric",
+        }),
       }
       state.deals.unshift(newDeal)
     },
@@ -72,6 +72,9 @@ const dealsSlice = createSlice({
     deleteDeal: (state, action: PayloadAction<string>) => {
       state.deals = state.deals.filter((deal) => deal.id !== action.payload)
     },
+    deleteDeals: (state, action: PayloadAction<string[]>) => {
+      state.deals = state.deals.filter((deal) => !action.payload.includes(deal.id))
+    },
     setLoading: (state, action: PayloadAction<boolean>) => {
       state.loading = action.payload
     },
@@ -81,6 +84,6 @@ const dealsSlice = createSlice({
   },
 })
 
-export const { addDeal, updateDeal, deleteDeal, setLoading, setError } = dealsSlice.actions
+export const { addDeal, updateDeal, deleteDeal, deleteDeals, setLoading, setError } = dealsSlice.actions
 
 export default dealsSlice.reducer

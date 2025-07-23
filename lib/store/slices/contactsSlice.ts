@@ -4,17 +4,17 @@ export interface Contact {
   id: string
   name: string
   email: string
-  phone?: string
-  company?: string
-  jobTitle?: string
-  leadStatus?: string
-  lifecycleStage?: string
-  owner?: string
-  lastActivity?: string
-  createDate?: string
-  source?: string
+  phone: string
+  leadStatus: string
+  favoriteContent: string
+  avatar: string
   firstName?: string
   lastName?: string
+  jobTitle?: string
+  lifecycleStage?: string
+  contactOwner?: string
+  createDate?: string
+  lastActivityDate?: string
 }
 
 interface ContactsState {
@@ -27,51 +27,51 @@ const initialState: ContactsState = {
   contacts: [
     {
       id: "1",
-      name: "John Doe",
-      firstName: "John",
-      lastName: "Doe",
-      email: "john.doe@example.com",
-      phone: "+1 (555) 123-4567",
-      company: "Acme Corp",
-      jobTitle: "Marketing Manager",
+      name: "Brian Halligan (Sample Contact)",
+      email: "bh@hubspot.com",
+      phone: "--",
       leadStatus: "New",
-      lifecycleStage: "Lead",
-      owner: "Sarah Johnson",
-      lastActivity: "2 days ago",
-      createDate: "2024-01-15",
-      source: "Website",
+      favoriteContent: "Blog Posts",
+      avatar: "/placeholder-user.jpg",
+      firstName: "Brian",
+      lastName: "Halligan",
+      jobTitle: "Executive Chairperson at HubSpot",
+      lifecycleStage: "Customer",
+      contactOwner: "Anil Kumar Pandiya",
+      createDate: "07/23/2025",
+      lastActivityDate: "--",
     },
     {
       id: "2",
-      name: "Jane Smith",
-      firstName: "Jane",
-      lastName: "Smith",
-      email: "jane.smith@techcorp.com",
-      phone: "+1 (555) 987-6543",
-      company: "TechCorp",
-      jobTitle: "Sales Director",
+      name: "Maria Johnson (Sample Contact)",
+      email: "emailmaria@hubspot.com",
+      phone: "--",
       leadStatus: "Qualified",
-      lifecycleStage: "Marketing Qualified Lead",
-      owner: "Mike Wilson",
-      lastActivity: "1 day ago",
-      createDate: "2024-01-10",
-      source: "LinkedIn",
+      favoriteContent: "Webinars",
+      avatar: "/placeholder-user.jpg",
+      firstName: "Maria",
+      lastName: "Johnson",
+      jobTitle: "Marketing Manager",
+      lifecycleStage: "Lead",
+      contactOwner: "Sarah Wilson",
+      createDate: "07/22/2025",
+      lastActivityDate: "1 day ago",
     },
     {
       id: "3",
-      name: "Bob Johnson",
-      firstName: "Bob",
-      lastName: "Johnson",
-      email: "bob.johnson@startup.io",
-      phone: "+1 (555) 456-7890",
-      company: "Startup Inc",
-      jobTitle: "CEO",
-      leadStatus: "Contacted",
-      lifecycleStage: "Sales Qualified Lead",
-      owner: "Sarah Johnson",
-      lastActivity: "3 hours ago",
-      createDate: "2024-01-20",
-      source: "Referral",
+      name: "TestUser Test",
+      email: "t@hubspot.com",
+      phone: "--",
+      leadStatus: "New",
+      favoriteContent: "Case Studies",
+      avatar: "/placeholder-user.jpg",
+      firstName: "TestUser",
+      lastName: "Test",
+      jobTitle: "Developer",
+      lifecycleStage: "Subscriber",
+      contactOwner: "Mike Davis",
+      createDate: "07/21/2025",
+      lastActivityDate: "2 days ago",
     },
   ],
   loading: false,
@@ -82,13 +82,16 @@ const contactsSlice = createSlice({
   name: "contacts",
   initialState,
   reducers: {
-    addContact: (state, action: PayloadAction<Omit<Contact, "id" | "createDate" | "lastActivity">>) => {
+    addContact: (state, action: PayloadAction<Omit<Contact, "id" | "createDate" | "lastActivityDate">>) => {
       const newContact: Contact = {
         ...action.payload,
         id: Date.now().toString(),
-        createDate: new Date().toISOString().split("T")[0],
-        lastActivity: "Just now",
-        name: `${action.payload.firstName || ""} ${action.payload.lastName || ""}`.trim() || action.payload.email,
+        createDate: new Date().toLocaleDateString("en-US", {
+          month: "2-digit",
+          day: "2-digit",
+          year: "numeric",
+        }),
+        lastActivityDate: "Just now",
       }
       state.contacts.unshift(newContact)
     },

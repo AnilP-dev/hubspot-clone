@@ -1,101 +1,44 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Checkbox } from "@/components/ui/checkbox"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { Checkbox } from "@/components/ui/checkbox"
 import {
   Search,
-  ChevronDown,
+  Filter,
   MoreHorizontal,
   Plus,
-  Filter,
+  Grid3X3,
+  List,
+  Download,
+  ChevronDown,
   ArrowUpDown,
-  ChevronLeft,
-  ChevronRight,
-  Shield,
-  X,
-  ArrowUp,
-  ArrowDown,
+  Trash2,
 } from "lucide-react"
-
-const mockCompanies = [
-  {
-    id: "1",
-    name: "HubSpot",
-    owner: "No owner",
-    createDate: "Today at 12:44 AM GMT+5:30",
-    phoneNumber: "--",
-    lastActivityDate: "Today at 12:44 AM GMT+5:30",
-    avatar: "H",
-  },
-  {
-    id: "2",
-    name: "Acme Corp",
-    owner: "John Doe",
-    createDate: "Yesterday at 3:22 PM GMT+5:30",
-    phoneNumber: "+1-555-0123",
-    lastActivityDate: "Yesterday at 4:15 PM GMT+5:30",
-    avatar: "A",
-  },
-]
-
-const filterTabs = [
-  { id: "all", label: "All companies", count: 2 },
-  { id: "my", label: "My companies", count: 1 },
-]
-
-type SortField = "name" | "owner" | "createDate" | "phoneNumber" | "lastActivityDate"
-type SortDirection = "asc" | "desc"
+import { useAppSelector, useAppDispatch } from "@/lib/store/hooks"
+import { deleteCompany, deleteCompanies } from "@/lib/store/slices/companiesSlice"
+import { toast } from "sonner"
 
 export function CompaniesPage() {
+  const dispatch = useAppDispatch()
+  const { companies } = useAppSelector((state) => state.companies)
   const [selectedCompanies, setSelectedCompanies] = useState<string[]>([])
-  const [activeTab, setActiveTab] = useState("all")
-  const [searchQuery, setSearchQuery] = useState("")
-  const [sortField, setSortField] = useState<SortField>("name")
-  const [sortDirection, setSortDirection] = useState<SortDirection>("asc")
-  const [currentPage, setCurrentPage] = useState(1)
-  const [itemsPerPage, setItemsPerPage] = useState(25)
+  const [searchTerm, setSearchTerm] = useState("")
+  const [viewMode, setViewMode] = useState<"list" | "grid">("list")
 
-  // Filter and search companies
-  const filteredCompanies = useMemo(() => {
-    let filtered = mockCompanies
-
-    // Apply tab filter
-    if (activeTab === "my") {
-      filtered = filtered.filter((company) => company.owner !== "No owner")
-    }
-
-    // Apply search
-    if (searchQuery) {
-      filtered = filtered.filter(
-        (company) =>
-          company.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          company.owner.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          company.phoneNumber.toLowerCase().includes(searchQuery.toLowerCase()),
-      )
-    }
-
-    // Apply sorting
-    filtered.sort((a, b) => {
-      const aValue = a[sortField]
-      const bValue = b[sortField]
-      const modifier = sortDirection === "asc" ? 1 : -1
-      return aValue.localeCompare(bValue) * modifier
-    })
-
-    return filtered
-  }, [activeTab, searchQuery, sortField, sortDirection])
-
-  // Pagination
-  const totalPages = Math.ceil(filteredCompanies.length / itemsPerPage)
-  const paginatedCompanies = filteredCompanies.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+  const filteredCompanies = companies.filter(
+    (company) =>
+      company.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (company.domain && company.domain.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (company.owner && company.owner.toLowerCase().includes(searchTerm.toLowerCase())),
+  )
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelectedCompanies(paginatedCompanies.map((c) => c.id))
+      setSelectedCompanies(filteredCompanies.map((company) => company.id))
     } else {
       setSelectedCompanies([])
     }
@@ -109,220 +52,257 @@ export function CompaniesPage() {
     }
   }
 
-  const handleSort = (field: SortField) => {
-    if (sortField === field) {
-      setSortDirection(sortDirection === "asc" ? "desc" : "asc")
-    } else {
-      setSortField(field)
-      setSortDirection("asc")
+  const handleDeleteSelected = () => {
+    if (selectedCompanies.length === 0) return
+
+    dispatch(deleteCompanies(selectedCompanies))
+    setSelectedCompanies([])
+    toast.success(`${selectedCompanies.length} company(ies) deleted successfully`)
+  }
+
+  const handleDeleteCompany = (companyId: string) => {
+    dispatch(deleteCompany(companyId))
+    toast.success("Company deleted successfully")
+  }
+
+  const handleExportCompanies = () => {
+    try {
+      // Create CSV headers
+      const headers = [
+        "Company Name",
+        "Domain",
+        "Owner",
+        "Phone",
+        "Create Date",
+        "Last Activity Date",
+        "Industry",
+        "City",
+        "State",
+      ]
+
+      // Create CSV rows
+      const csvRows = [
+        headers.join(","),
+        ...filteredCompanies.map((company) =>
+          [
+            `"${company.name || ""}"`,
+            `"${company.domain || ""}"`,
+            `"${company.owner || ""}"`,
+            `"${company.phone || ""}"`,
+            `"${company.createDate || ""}"`,
+            `"${company.lastActivityDate || ""}"`,
+            `"${company.industry || ""}"`,
+            `"${company.city || ""}"`,
+            `"${company.state || ""}"`,
+          ].join(","),
+        ),
+      ]
+
+      // Create and download CSV file
+      const csvContent = csvRows.join("\n")
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
+      const link = document.createElement("a")
+
+      if (link.download !== undefined) {
+        const url = URL.createObjectURL(blob)
+        link.setAttribute("href", url)
+        link.setAttribute("download", "companies.csv")
+        link.style.visibility = "hidden"
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+      }
+
+      toast.success(`Exported ${filteredCompanies.length} companies successfully`)
+    } catch (error) {
+      console.error("Export error:", error)
+      toast.error("Failed to export companies")
     }
   }
 
-  const getSortIcon = (field: SortField) => {
-    if (sortField !== field) return <ArrowUpDown className="w-4 h-4" />
-    return sortDirection === "asc" ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />
-  }
-
   return (
-    <div className="flex-1 bg-white w-full min-w-0">
+    <div className="p-6 bg-gray-50 min-h-screen">
       {/* Header */}
-      <div className="p-6 border-b w-full">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-semibold text-gray-900">Companies</h1>
-            <ChevronDown className="w-5 h-5 text-gray-500" />
-            <span className="text-sm text-gray-500">
-              {filteredCompanies.length} record{filteredCompanies.length !== 1 ? "s" : ""}
-            </span>
+      <div className="mb-6">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h1 className="text-2xl font-semibold text-gray-900 flex items-center gap-2">
+              Companies
+              <ChevronDown className="h-5 w-5 text-gray-500" />
+            </h1>
+            <p className="text-sm text-gray-600">
+              {companies.length} record{companies.length !== 1 ? "s" : ""}
+            </p>
           </div>
-
-          <div className="flex items-center gap-3">
-            <Button variant="outline" size="sm" className="flex items-center gap-2 bg-transparent text-blue-600">
-              <Shield className="w-4 h-4" />
-              Data Quality
+          <div className="flex items-center gap-2">
+            <Button variant="outline" className="text-orange-600 border-orange-600 hover:bg-orange-50 bg-transparent">
+              Actions
+              <ChevronDown className="h-4 w-4 ml-1" />
             </Button>
-
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="flex items-center gap-2 bg-transparent">
-                  Actions
-                  <ChevronDown className="w-4 h-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuItem>Edit properties</DropdownMenuItem>
-                <DropdownMenuItem>Manage duplicates</DropdownMenuItem>
-                <DropdownMenuItem>Fix formatting issues</DropdownMenuItem>
-                <DropdownMenuItem>Restore records</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            <Button variant="outline" size="sm">
+            <Button variant="outline" className="text-orange-600 border-orange-600 hover:bg-orange-50 bg-transparent">
               Import
             </Button>
-
-            <Button size="sm" className="bg-orange-500 hover:bg-orange-600">
-              Create company
-            </Button>
+            <Button className="bg-orange-600 hover:bg-orange-700 text-white">Create company</Button>
           </div>
         </div>
 
-        {/* Filter Tabs */}
-        <div className="flex items-center gap-1 mb-6">
-          {filterTabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`px-4 py-2 text-sm rounded-md transition-colors flex items-center gap-2 ${
-                activeTab === tab.id
-                  ? "bg-blue-50 text-blue-700 border border-blue-200"
-                  : "text-gray-600 hover:bg-gray-50"
-              }`}
+        {/* Tabs */}
+        <div className="flex items-center gap-4 mb-4">
+          <div className="flex bg-white rounded-lg border border-gray-200">
+            <Button
+              variant="ghost"
+              className="bg-white text-gray-900 border-r border-gray-200 rounded-r-none hover:bg-gray-50"
             >
-              {tab.label}
-              {activeTab === tab.id && tab.id === "all" && <X className="w-4 h-4" />}
-            </button>
-          ))}
-
-          <Button variant="outline" size="sm" className="ml-4 text-blue-600 border-blue-200 bg-transparent">
-            <Plus className="w-4 h-4 mr-1" />
+              All companies
+              <button className="ml-2 text-gray-400 hover:text-gray-600">
+                <MoreHorizontal className="h-4 w-4" />
+              </button>
+            </Button>
+            <Button variant="ghost" className="text-gray-600 hover:bg-gray-50 rounded-l-none">
+              My companies
+            </Button>
+          </div>
+          <Button variant="link" className="text-[#00BDA5] p-0">
+            <Plus className="h-4 w-4 mr-1" />
             Add view (2/5)
           </Button>
-
-          <Button variant="ghost" size="sm" className="text-blue-600">
+          <Button variant="link" className="text-[#00BDA5] p-0 ml-auto">
             All Views
           </Button>
         </div>
 
-        {/* Filters and Search */}
+        {/* Filters and Controls */}
         <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-4">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="flex items-center gap-2 bg-transparent text-blue-600">
-                  Company owner
-                  <ChevronDown className="w-4 h-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuItem>All owners</DropdownMenuItem>
-                <DropdownMenuItem>Assigned to me</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+          <div className="flex items-center gap-2">
+            <div className="flex bg-white rounded border border-gray-200">
+              <Button
+                variant="ghost"
+                size="sm"
+                className={`p-2 ${viewMode === "list" ? "bg-gray-100" : ""}`}
+                onClick={() => setViewMode("list")}
+              >
+                <List className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className={`p-2 ${viewMode === "grid" ? "bg-gray-100" : ""}`}
+                onClick={() => setViewMode("grid")}
+              >
+                <Grid3X3 className="h-4 w-4" />
+              </Button>
+            </div>
 
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="flex items-center gap-2 bg-transparent text-blue-600">
-                  Create date
-                  <ChevronDown className="w-4 h-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuItem>All time</DropdownMenuItem>
-                <DropdownMenuItem>Last 30 days</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <Select defaultValue="company-owner">
+              <SelectTrigger className="w-40 bg-white">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="company-owner">Company owner</SelectItem>
+                <SelectItem value="anil">Anil Kumar Pandiya</SelectItem>
+              </SelectContent>
+            </Select>
 
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="flex items-center gap-2 bg-transparent text-blue-600">
-                  Last activity date
-                  <ChevronDown className="w-4 h-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuItem>All time</DropdownMenuItem>
-                <DropdownMenuItem>Last 30 days</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <Select defaultValue="create-date">
+              <SelectTrigger className="w-32 bg-white">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="create-date">Create date</SelectItem>
+                <SelectItem value="last-week">Last week</SelectItem>
+              </SelectContent>
+            </Select>
 
-            <Button variant="outline" size="sm" className="flex items-center gap-2 bg-transparent text-blue-600">
-              <Plus className="w-4 h-4" />
+            <Button variant="outline" className="text-[#00BDA5] border-[#00BDA5] hover:bg-[#00BDA5]/5 bg-transparent">
+              <Plus className="h-4 w-4 mr-1" />
               More
             </Button>
 
-            <Button variant="outline" size="sm" className="flex items-center gap-2 bg-transparent text-blue-600">
-              <Filter className="w-4 h-4" />
+            <Button variant="outline" className="text-gray-600 border-gray-300 bg-transparent">
+              <Filter className="h-4 w-4 mr-1" />
               Advanced filters
             </Button>
           </div>
 
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm">
+            <Button
+              onClick={handleExportCompanies}
+              variant="outline"
+              size="sm"
+              className="text-gray-600 bg-transparent hover:bg-gray-50"
+            >
+              <Download className="h-4 w-4 mr-1" />
               Export
             </Button>
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" className="text-gray-600 bg-transparent">
               Edit columns
             </Button>
           </div>
         </div>
 
         {/* Search */}
-        <div className="relative max-w-md">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+        <div className="relative mb-4">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
           <Input
-            placeholder="Search name, phone, or domain"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
+            placeholder="Search name, domain, or owner"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10 bg-white border-gray-300 focus:border-[#00BDA5] focus:ring-[#00BDA5]"
           />
         </div>
       </div>
 
       {/* Table */}
-      <div className="overflow-x-auto w-full">
-        <Table className="w-full">
+      <div className="bg-white rounded-lg border border-gray-200">
+        <Table>
           <TableHeader>
-            <TableRow className="border-b">
+            <TableRow className="border-b border-gray-200">
               <TableHead className="w-12">
                 <Checkbox
-                  checked={
-                    paginatedCompanies.length > 0 &&
-                    paginatedCompanies.every((company) => selectedCompanies.includes(company.id))
-                  }
+                  checked={selectedCompanies.length === filteredCompanies.length && filteredCompanies.length > 0}
                   onCheckedChange={handleSelectAll}
                 />
               </TableHead>
-              <TableHead>
-                <div className="flex items-center gap-2">
-                  <span>COMPANY NAME</span>
-                  <button onClick={() => handleSort("name")}>{getSortIcon("name")}</button>
-                  <MoreHorizontal className="w-4 h-4" />
+              <TableHead className="text-gray-600 font-medium">
+                <div className="flex items-center gap-1">
+                  COMPANY NAME
+                  <ArrowUpDown className="h-4 w-4" />
+                  <MoreHorizontal className="h-4 w-4" />
                 </div>
               </TableHead>
-              <TableHead>
-                <div className="flex items-center gap-2">
-                  <span>COMPANY OWNER</span>
-                  <button onClick={() => handleSort("owner")}>{getSortIcon("owner")}</button>
-                  <MoreHorizontal className="w-4 h-4" />
+              <TableHead className="text-gray-600 font-medium">
+                <div className="flex items-center gap-1">
+                  DOMAIN
+                  <ArrowUpDown className="h-4 w-4" />
+                  <MoreHorizontal className="h-4 w-4" />
                 </div>
               </TableHead>
-              <TableHead>
-                <div className="flex items-center gap-2">
-                  <span>CREATE DATE (GMT+5:30)</span>
-                  <button onClick={() => handleSort("createDate")}>{getSortIcon("createDate")}</button>
-                  <MoreHorizontal className="w-4 h-4" />
+              <TableHead className="text-gray-600 font-medium">
+                <div className="flex items-center gap-1">
+                  OWNER
+                  <ArrowUpDown className="h-4 w-4" />
+                  <MoreHorizontal className="h-4 w-4" />
                 </div>
               </TableHead>
-              <TableHead>
-                <div className="flex items-center gap-2">
-                  <span>PHONE NUMBER</span>
-                  <button onClick={() => handleSort("phoneNumber")}>{getSortIcon("phoneNumber")}</button>
-                  <MoreHorizontal className="w-4 h-4" />
+              <TableHead className="text-gray-600 font-medium">
+                <div className="flex items-center gap-1">
+                  PHONE
+                  <ArrowUpDown className="h-4 w-4" />
+                  <MoreHorizontal className="h-4 w-4" />
                 </div>
               </TableHead>
-              <TableHead>
-                <div className="flex items-center gap-2">
-                  <span>LAST ACTIVITY DATE (GMT+5:30)</span>
-                  <button onClick={() => handleSort("lastActivityDate")}>{getSortIcon("lastActivityDate")}</button>
-                  <MoreHorizontal className="w-4 h-4" />
+              <TableHead className="text-gray-600 font-medium">
+                <div className="flex items-center gap-1">
+                  CREATE DATE
+                  <ArrowUpDown className="h-4 w-4" />
+                  <MoreHorizontal className="h-4 w-4" />
                 </div>
               </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {paginatedCompanies.map((company) => (
-              <TableRow key={company.id} className="hover:bg-gray-50">
+            {filteredCompanies.map((company) => (
+              <TableRow key={company.id} className="border-b border-gray-100 hover:bg-gray-50">
                 <TableCell>
                   <Checkbox
                     checked={selectedCompanies.includes(company.id)}
@@ -331,62 +311,72 @@ export function CompaniesPage() {
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center text-white text-sm font-semibold">
-                      {company.avatar}
+                    <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                      {company.name.charAt(0)}
                     </div>
-                    <span className="text-blue-600 hover:underline cursor-pointer">{company.name}</span>
+                    <span className="text-[#00BDA5] hover:underline cursor-pointer font-medium">{company.name}</span>
                   </div>
                 </TableCell>
-                <TableCell className="text-gray-500">{company.owner}</TableCell>
-                <TableCell className="text-gray-900">{company.createDate}</TableCell>
-                <TableCell className="text-gray-500">{company.phoneNumber}</TableCell>
-                <TableCell className="text-gray-900">{company.lastActivityDate}</TableCell>
+                <TableCell>
+                  <span className="text-[#00BDA5] hover:underline cursor-pointer">{company.domain || "--"}</span>
+                </TableCell>
+                <TableCell>
+                  <span className="text-gray-900">{company.owner || "Unassigned"}</span>
+                </TableCell>
+                <TableCell>
+                  <span className="text-gray-900">{company.phone || "--"}</span>
+                </TableCell>
+                <TableCell>
+                  <span className="text-gray-900">{company.createDate || "--"}</span>
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
-      </div>
 
-      {/* Pagination */}
-      <div className="flex items-center justify-between p-4 border-t">
-        <div className="flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            disabled={currentPage === 1}
-            onClick={() => setCurrentPage(currentPage - 1)}
-          >
-            <ChevronLeft className="w-4 h-4" />
-            Prev
-          </Button>
-          <Button variant="ghost" size="sm" className="bg-blue-50 text-blue-600">
-            {currentPage}
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            disabled={currentPage === totalPages}
-            onClick={() => setCurrentPage(currentPage + 1)}
-          >
-            Next
-            <ChevronRight className="w-4 h-4" />
-          </Button>
-        </div>
+        {filteredCompanies.length === 0 && (
+          <div className="text-center py-12">
+            <p className="text-gray-500">No companies found</p>
+          </div>
+        )}
 
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm" className="flex items-center gap-2">
-              {itemsPerPage} per page
-              <ChevronDown className="w-4 h-4" />
+        {/* Pagination */}
+        <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200">
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" disabled>
+              Prev
             </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent>
-            <DropdownMenuItem onClick={() => setItemsPerPage(25)}>25 per page</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setItemsPerPage(50)}>50 per page</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setItemsPerPage(100)}>100 per page</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+            <Button variant="outline" size="sm" className="bg-[#00BDA5] text-white border-[#00BDA5]">
+              1
+            </Button>
+            <Button variant="outline" size="sm" disabled>
+              Next
+            </Button>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-600">25 per page</span>
+            <ChevronDown className="h-4 w-4 text-gray-400" />
+          </div>
+        </div>
       </div>
+
+      {/* Delete selected button */}
+      {selectedCompanies.length > 0 && (
+        <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2">
+          <div className="bg-white border border-gray-200 rounded-lg shadow-lg px-4 py-2 flex items-center gap-2">
+            <span className="text-sm text-gray-600">{selectedCompanies.length} selected</span>
+            <Button
+              onClick={handleDeleteSelected}
+              variant="outline"
+              size="sm"
+              className="text-red-600 border-red-600 hover:bg-red-50 bg-transparent"
+            >
+              <Trash2 className="h-4 w-4 mr-1" />
+              Delete
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
