@@ -17,7 +17,11 @@ import {
   Folder,
   List,
   Grid3X3,
+  Edit,
+  Trash2,
+  FolderOpen,
 } from "lucide-react"
+import Link from "next/link"
 import { useAppSelector, useAppDispatch } from "@/lib/store/hooks"
 import { deleteList, deleteLists } from "@/lib/store/slices/listsSlice"
 import { toast } from "sonner"
@@ -110,9 +114,11 @@ export function ListsPage() {
               <SelectItem value="deal-list">Deal list</SelectItem>
             </SelectContent>
           </Select>
-          <Button className=" h-8 bg-orange-500 hover:bg-orange-700 text-white rounded-sm">
-            Create list
-          </Button>
+          <Link href="/crm/lists/create">
+            <Button className=" h-8 bg-orange-500 hover:bg-orange-700 text-white rounded-sm">
+              Create list
+            </Button>
+          </Link>
         </div>
       </div>
 
@@ -253,115 +259,172 @@ export function ListsPage() {
         </div>
       </div>
 
-      {/* Search */}
+      {/* Search and Actions */}
       <div className="px-6 py-3 border-b border-gray-200">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-          <Input
-            placeholder="Search lists"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-          />
+        <div className="flex items-center gap-4">
+          <div className="relative w-80">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <Input
+              placeholder="Search lists"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          
+          {selectedLists.length > 0 && (
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-600">
+                {selectedLists.length} selected
+              </span>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="gap-2 text-[#00BDA5] hover:text-[#00BDA5]/80"
+              >
+                <Edit className="w-4 h-4" />
+                Edit
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="gap-2 text-red-600 hover:text-red-700"
+                onClick={handleDeleteSelected}
+              >
+                <Trash2 className="w-4 h-4" />
+                Delete
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="gap-2 text-[#00BDA5] hover:text-[#00BDA5]/80"
+              >
+                <FolderOpen className="w-4 h-4" />
+                Move to folder
+              </Button>
+            </div>
+          )}
         </div>
       </div>
 
       {/* Table */}
       <div className="flex-1 overflow-auto">
-        <Table>
-          <TableHeader>
-            <TableRow className="bg-gray-50 text-xs">
-              <TableHead className="w-12">
-                <Checkbox
-                  checked={selectedLists.length === filteredLists.length && filteredLists.length > 0}
-                  onCheckedChange={handleSelectAll}
-                />
-              </TableHead>
-              <TableHead className="font-medium text-gray-900">
-                <div className="flex items-center gap-1">
-                  NAME
-                  <ArrowUpDown className="w-3 h-3" />
-                </div>
-              </TableHead>
-              <TableHead className="font-medium text-gray-900">
-                <div className="flex items-center gap-1">
-                  LIST SIZE
-                  <ArrowUpDown className="w-3 h-3" />
-                </div>
-              </TableHead>
-              <TableHead className="font-medium text-gray-900">
-                <div className="flex items-center gap-1">
-                  TYPE
-                  <ArrowUpDown className="w-3 h-3" />
-                </div>
-              </TableHead>
-              <TableHead className="font-medium text-gray-900">
-                <div className="flex items-center gap-1">
-                  OBJECT
-                  <ArrowUpDown className="w-3 h-3" />
-                </div>
-              </TableHead>
-              <TableHead className="font-medium text-gray-900">
-                <div className="flex items-center gap-1">
-                  LAST UPDATED (GMT +5:30)
-                  <ArrowUpDown className="w-3 h-3" />
-                </div>
-              </TableHead>
-              <TableHead className="font-medium text-gray-900">
-                <div className="flex items-center gap-1">
-                  CREATOR
-                  <ArrowUpDown className="w-3 h-3" />
-                </div>
-              </TableHead>
-              <TableHead className="font-medium text-gray-900">
-                <div className="flex items-center gap-1">
-                  FOLD...
-                  <ArrowUpDown className="w-3 h-3" />
-                </div>
-              </TableHead>
-              <TableHead className="font-medium text-gray-900">
-                <div className="flex items-center gap-1">
-                  USED IN (COUNT)
-                  <ArrowUpDown className="w-3 h-3" />
-                </div>
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredLists.map((list) => (
-              <TableRow key={list.id} className="hover:bg-gray-50">
-                <TableCell>
+        {filteredLists.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-16 px-6">
+            <img 
+              src="https://static.hsappstatic.net/ui-images/static-2.810/optimized/empty-state-charts.svg" 
+              alt="No lists found"
+              className="w-32 h-32 mb-4 opacity-50"
+            />
+            <div className="text-center">
+              <p className="text-gray-600 font-medium mb-2">
+                There aren't any lists matching your filters.
+              </p>
+              <p className="text-gray-500 text-sm">
+                Try changing your filters and searching again.
+              </p>
+            </div>
+          </div>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-gray-50 text-xs">
+                <TableHead className="w-12">
                   <Checkbox
-                    checked={selectedLists.includes(list.id)}
-                    onCheckedChange={(checked) => handleSelectList(list.id, checked as boolean)}
+                    checked={selectedLists.length === filteredLists.length && filteredLists.length > 0}
+                    onCheckedChange={handleSelectAll}
                   />
-                </TableCell>
-                <TableCell>
-                  <button className="font-medium text-left hover:text-[#00BDA5]" style={{ color: '#00BDA5' }}>
-                    {list.name}
-                  </button>
-                </TableCell>
-                <TableCell className="text-gray-900">{list.size}</TableCell>
-                <TableCell>
+                </TableHead>
+                <TableHead className="font-medium text-gray-900">
                   <div className="flex items-center gap-1">
-                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#00BDA5' }}></div>
-                    <span className="text-gray-900">{list.type}</span>
+                    NAME
+                    <ArrowUpDown className="w-3 h-3" />
                   </div>
-                </TableCell>
-                <TableCell className="text-gray-900">{list.object}</TableCell>
-                <TableCell>
-                  <div className="text-gray-900">
-                    {list.lastUpdated}
-                    <div className="text-xs text-gray-500">by {list.creator}</div>
+                </TableHead>
+                <TableHead className="font-medium text-gray-900">
+                  <div className="flex items-center gap-1">
+                    LIST SIZE
+                    <ArrowUpDown className="w-3 h-3" />
                   </div>
-                </TableCell>
-                <TableCell className="text-gray-900">{list.creator}</TableCell>
-                <TableCell className="text-gray-900">{list.folder || "--"}</TableCell>
-                <TableCell className="text-gray-900">{list.usedInCount}</TableCell>
+                </TableHead>
+                <TableHead className="font-medium text-gray-900">
+                  <div className="flex items-center gap-1">
+                    TYPE
+                    <ArrowUpDown className="w-3 h-3" />
+                  </div>
+                </TableHead>
+                <TableHead className="font-medium text-gray-900">
+                  <div className="flex items-center gap-1">
+                    OBJECT
+                    <ArrowUpDown className="w-3 h-3" />
+                  </div>
+                </TableHead>
+                <TableHead className="font-medium text-gray-900">
+                  <div className="flex items-center gap-1">
+                    LAST UPDATED (GMT +5:30)
+                    <ArrowUpDown className="w-3 h-3" />
+                  </div>
+                </TableHead>
+                <TableHead className="font-medium text-gray-900">
+                  <div className="flex items-center gap-1">
+                    CREATOR
+                    <ArrowUpDown className="w-3 h-3" />
+                  </div>
+                </TableHead>
+                <TableHead className="font-medium text-gray-900">
+                  <div className="flex items-center gap-1">
+                    FOLD...
+                    <ArrowUpDown className="w-3 h-3" />
+                  </div>
+                </TableHead>
+                <TableHead className="font-medium text-gray-900">
+                  <div className="flex items-center gap-1">
+                    USED IN (COUNT)
+                    <ArrowUpDown className="w-3 h-3" />
+                  </div>
+                </TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {filteredLists.map((list) => (
+                <TableRow key={list.id} className="hover:bg-gray-50">
+                  <TableCell>
+                    <Checkbox
+                      checked={selectedLists.includes(list.id)}
+                      onCheckedChange={(checked) => handleSelectList(list.id, checked as boolean)}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Link 
+                      href={`/crm/lists/${list.id}`}
+                      className="font-medium text-left hover:text-[#00BDA5]" 
+                      style={{ color: '#00BDA5' }}
+                    >
+                      {list.name}
+                    </Link>
+                  </TableCell>
+                  <TableCell className="text-gray-900">{list.size}</TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-1">
+                      <div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#00BDA5' }}></div>
+                      <span className="text-gray-900">{list.type}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-gray-900">{list.object}</TableCell>
+                  <TableCell>
+                    <div className="text-gray-900">
+                      {list.lastUpdated}
+                      <div className="text-xs text-gray-500">by {list.creator}</div>
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-gray-900">{list.creator}</TableCell>
+                  <TableCell className="text-gray-900">{list.folder || "--"}</TableCell>
+                  <TableCell className="text-gray-900">{list.usedInCount}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
       </div>
       </div>
     </div>
