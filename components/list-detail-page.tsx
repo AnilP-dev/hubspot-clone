@@ -96,7 +96,7 @@ export function ListDetailPage() {
   }
 
   const renderFiltersTab = () => (
-    <div className="flex h-full">
+    <div className="grow flex h-full">
       {/* Left Sidebar - Filters */}
       <div className="w-80 border-r border-gray-200 bg-gray-50">
         <div className="p-6">
@@ -407,7 +407,7 @@ export function ListDetailPage() {
   )
 
   return (
-    <div className="min-h-screen bg-white" style={{ fontFamily: '"Lexend Deca",Helvetica,Arial,sans-serif' }}>
+    <div className="min-h-screen flex flex-col bg-white" style={{ fontFamily: '"Lexend Deca",Helvetica,Arial,sans-serif' }}>
       <style jsx>{`
         .text-primary { color: #33475b; }
       `}</style>
@@ -521,7 +521,7 @@ export function ListDetailPage() {
       </div>
 
       {/* Tab Content */}
-      <div className="flex-1">
+      <div className="flex-1 flex flex-col">
         {activeTab === "filters" && renderFiltersTab()}
         {activeTab === "performance" && renderPerformanceTab()}
         {activeTab === "activity" && renderActivityTab()}
