@@ -1,0 +1,476 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222.2 84% 4.9%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96%;
+    --accent-foreground: 222.2 84% 4.9%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
+    --radius: 0.5rem;
+    --chart-1: 12 76% 61%;
+    --chart-2: 173 58% 39%;
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
+
+    /* HubSpot Colors */
+    --hubspot-sidebar-bg: #33475b;
+    --hubspot-sidebar-hover: #3e5266;
+    --hubspot-sidebar-active: #4a5d72;
+    --hubspot-text-primary: #ffffff;
+    --hubspot-text-secondary: #cbd5e0;
+    --hubspot-text-muted: #a0aec0;
+    --hubspot-orange: #ff7a59;
+    --hubspot-blue: #0091ae;
+    --hubspot-teal: #00a4bd;
+    --hubspot-red: #e53e3e;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+    --chart-1: 220 70% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans",
+      "Droid Sans", "Helvetica Neue", sans-serif;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+  html,
+  body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+  }
+}
+
+/* HubSpot Custom Styles */
+.hubspot-sidebar {
+  background-color: var(--hubspot-sidebar-bg);
+  width: 56px;
+  min-width: 56px;
+  height: 100vh;
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+  transition: width 0.2s ease;
+}
+
+.hubspot-sidebar.expanded {
+  width: 280px;
+  min-width: 280px;
+}
+
+.hubspot-sidebar-header {
+  padding: 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 64px;
+}
+
+.hubspot-logo {
+  width: 24px;
+  height: 24px;
+  background-color: var(--hubspot-orange);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.hubspot-logo::after {
+  content: "";
+  width: 12px;
+  height: 12px;
+  background-color: white;
+  border-radius: 2px;
+}
+
+.hubspot-brand-text {
+  color: var(--hubspot-text-primary);
+  font-size: 14px;
+  font-weight: 600;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.hubspot-sidebar.expanded .hubspot-brand-text {
+  opacity: 1;
+}
+
+.hubspot-sidebar-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0;
+}
+
+.hubspot-nav-section {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.hubspot-nav-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 12px 16px;
+  color: var(--hubspot-text-secondary);
+  text-decoration: none;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  border: none;
+  background: none;
+  font-size: 14px;
+  font-weight: 400;
+  min-height: 48px;
+}
+
+.hubspot-nav-item:hover {
+  background-color: var(--hubspot-sidebar-hover);
+  color: var(--hubspot-text-primary);
+}
+
+.hubspot-nav-item.active {
+  background-color: var(--hubspot-sidebar-active);
+  color: var(--hubspot-text-primary);
+}
+
+.hubspot-nav-item.expandable {
+  justify-content: space-between;
+}
+
+.hubspot-nav-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  margin-right: 12px;
+}
+
+.hubspot-sidebar:not(.expanded) .hubspot-nav-icon {
+  margin-right: 0;
+}
+
+.hubspot-nav-text {
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.hubspot-sidebar.expanded .hubspot-nav-text {
+  opacity: 1;
+}
+
+.hubspot-nav-chevron {
+  width: 16px;
+  height: 16px;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+  opacity: 0;
+}
+
+.hubspot-sidebar.expanded .hubspot-nav-chevron {
+  opacity: 1;
+}
+
+.hubspot-nav-chevron.expanded {
+  transform: rotate(90deg);
+}
+
+.hubspot-submenu {
+  background-color: rgba(0, 0, 0, 0.1);
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+
+.hubspot-submenu.expanded {
+  max-height: 600px;
+}
+
+.hubspot-submenu-item {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 10px 16px 10px 52px;
+  color: var(--hubspot-text-muted);
+  text-decoration: none;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  border: none;
+  background: none;
+  font-size: 13px;
+  font-weight: 400;
+  min-height: 40px;
+}
+
+.hubspot-submenu-item:hover {
+  background-color: var(--hubspot-sidebar-hover);
+  color: var(--hubspot-text-primary);
+}
+
+.hubspot-submenu-item.active {
+  background-color: var(--hubspot-sidebar-active);
+  color: var(--hubspot-text-primary);
+}
+
+.hubspot-submenu-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  margin-right: 12px;
+}
+
+.hubspot-notification-dot {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 8px;
+  height: 8px;
+  background-color: var(--hubspot-red);
+  border-radius: 50%;
+  border: 2px solid var(--hubspot-sidebar-bg);
+}
+
+.hubspot-main-content {
+  width: 100%;
+  margin-left: 56px;
+  transition: margin-left 0.2s ease;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.hubspot-sidebar.expanded ~ .hubspot-main-content {
+  margin-left: 280px;
+}
+
+/* Custom scrollbar */
+.hubspot-sidebar-content::-webkit-scrollbar {
+  width: 4px;
+}
+
+.hubspot-sidebar-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.hubspot-sidebar-content::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
+}
+
+.hubspot-sidebar-content::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .hubspot-sidebar {
+    transform: translateX(-100%);
+  }
+
+  .hubspot-sidebar.mobile-open {
+    transform: translateX(0);
+  }
+
+  .hubspot-main-content {
+    margin-left: 0;
+  }
+}
+
+/* Collapse Navigation Button */
+.hubspot-collapse-button {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 32px;
+  height: 32px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--hubspot-text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  opacity: 0;
+}
+
+.hubspot-sidebar.expanded .hubspot-collapse-button {
+  opacity: 1;
+}
+
+.hubspot-collapse-button:hover {
+  background-color: rgba(255, 255, 255, 0.15);
+  color: var(--hubspot-text-primary);
+}
+
+.hubspot-collapse-button svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* Top bar button improvements */
+.hubspot-upgrade-btn {
+  background-color: #ff7a59 !important;
+  color: white !important;
+  border: none !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  padding: 6px 12px !important;
+  height: 28px !important;
+  border-radius: 4px !important;
+}
+
+.hubspot-upgrade-btn:hover {
+  background-color: #ff6b47 !important;
+}
+
+.hubspot-copilot-btn {
+  background-color: #0091ae !important;
+  color: white !important;
+  border: none !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  padding: 6px 12px !important;
+  height: 28px !important;
+  border-radius: 4px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+}
+
+.hubspot-copilot-btn:hover {
+  background-color: #007a94 !important;
+}
+
+.hubspot-user-dropdown {
+  background: transparent !important;
+  border: none !important;
+  color: #cbd5e0 !important;
+  font-size: 13px !important;
+  font-weight: 400 !important;
+  padding: 4px 8px !important;
+  height: 28px !important;
+  border-radius: 4px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+.hubspot-user-dropdown:hover {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  color: white !important;
+}
+
+.hubspot-user-avatar {
+  width: 20px !important;
+  height: 20px !important;
+  background-color: #0091ae !important;
+  border-radius: 50% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  color: white !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+}
+
+/* HubSpot Typography */
+.hubspot-heading-1 {
+  font-size: 28px;
+  font-weight: 600;
+  color: #2d3748;
+  line-height: 1.2;
+}
+
+.hubspot-heading-2 {
+  font-size: 24px;
+  font-weight: 600;
+  color: #2d3748;
+  line-height: 1.3;
+}
+
+.hubspot-heading-3 {
+  font-size: 20px;
+  font-weight: 600;
+  color: #2d3748;
+  line-height: 1.4;
+}
+
+.hubspot-body-text {
+  font-size: 14px;
+  font-weight: 400;
+  color: #4a5568;
+  line-height: 1.5;
+}
+
+.hubspot-small-text {
+  font-size: 12px;
+  font-weight: 400;
+  color: #718096;
+  line-height: 1.4;
+}
+
+.hubspot-link {
+  color: var(--hubspot-teal);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.hubspot-link:hover {
+  text-decoration: underline;
+}
