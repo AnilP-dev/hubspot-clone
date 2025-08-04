@@ -6,6 +6,14 @@ import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Checkbox } from "@/components/ui/checkbox"
+import { Textarea } from "@/components/ui/textarea"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import {
   ChevronDown,
   Search,
@@ -17,6 +25,21 @@ import {
   MoreHorizontal,
   ChevronLeft,
   ChevronRight,
+  Trash2,
+  Bold,
+  Italic,
+  Underline,
+  AlignLeft,
+  List,
+  Link,
+  DollarSign,
+  ThumbsUp,
+  ThumbsDown,
+  MessageCircle,
+  Plus,
+  Phone,
+  Mail,
+  ExternalLink,
 } from "lucide-react"
 import {
   DropdownMenu,
@@ -31,8 +54,15 @@ export function CallsPage() {
     { id: 2, label: "All calls", value: "all", active: false },
   ])
 
-  // Sample call data
-  const callData = [
+  const [selectedCalls, setSelectedCalls] = useState<number[]>([])
+  const [showBulkEditModal, setShowBulkEditModal] = useState(false)
+  const [bulkEditProperty, setBulkEditProperty] = useState("Call notes")
+  const [bulkEditValue, setBulkEditValue] = useState("")
+  
+  // Call sidebar state
+  const [selectedCallForEdit, setSelectedCallForEdit] = useState<number | null>(null)
+  const [showCallSidebar, setShowCallSidebar] = useState(false)
+  const [calls, setCalls] = useState([
     {
       id: 1,
       title: "Call with Maria Johnson (Sample Contact)",
@@ -57,7 +87,7 @@ export function CallsPage() {
       contact: { name: "Brian Halligan (Sample Contact)", color: "bg-red-500" },
       company: { name: "HubSpot", color: "bg-orange-500" }
     }
-  ]
+  ])
 
   const removeFilter = (filterId: number) => {
     setActiveFilters(filters => filters.filter(f => f.id !== filterId))
@@ -72,6 +102,86 @@ export function CallsPage() {
     }
     setActiveFilters([...activeFilters, newFilter])
   }
+
+  // Selection handlers
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedCalls(calls.map(call => call.id))
+    } else {
+      setSelectedCalls([])
+    }
+  }
+
+  const handleSelectCall = (callId: number, checked: boolean) => {
+    if (checked) {
+      setSelectedCalls([...selectedCalls, callId])
+    } else {
+      setSelectedCalls(selectedCalls.filter(id => id !== callId))
+    }
+  }
+
+  // Action handlers
+  const handleDeleteSelected = () => {
+    if (window.confirm(`Are you sure you want to delete ${selectedCalls.length} call${selectedCalls.length > 1 ? 's' : ''}?`)) {
+      setCalls(calls.filter(call => !selectedCalls.includes(call.id)))
+      setSelectedCalls([])
+    }
+  }
+
+  const handleEditSelected = () => {
+    setShowBulkEditModal(true)
+  }
+
+  const handleBulkUpdate = () => {
+    if (bulkEditProperty === "Call notes") {
+      setCalls(calls.map(call => 
+        selectedCalls.includes(call.id) 
+          ? { ...call, notes: bulkEditValue }
+          : call
+      ))
+    }
+    setShowBulkEditModal(false)
+    setBulkEditValue("")
+    setSelectedCalls([])
+  }
+
+  const handleBulkEditCancel = () => {
+    setShowBulkEditModal(false)
+    setBulkEditValue("")
+  }
+
+  // Call sidebar handlers
+  const handleCallTitleClick = (callId: number) => {
+    setSelectedCallForEdit(callId)
+    setShowCallSidebar(true)
+  }
+
+  const handleCloseSidebar = () => {
+    setShowCallSidebar(false)
+    setSelectedCallForEdit(null)
+  }
+
+  const getSelectedCall = () => {
+    return calls.find(call => call.id === selectedCallForEdit)
+  }
+
+  const handleEditSingle = (callId: number) => {
+    const call = calls.find(c => c.id === callId)
+    if (call) {
+      alert(`Edit functionality would open for: ${call.title}`)
+    }
+  }
+
+  const handleDeleteSingle = (callId: number) => {
+    const call = calls.find(c => c.id === callId)
+    if (call && window.confirm(`Are you sure you want to delete "${call.title}"?`)) {
+      setCalls(calls.filter(c => c.id !== callId))
+      setSelectedCalls(selectedCalls.filter(id => id !== callId))
+    }
+  }
+
+  const isAllSelected = calls.length > 0 && selectedCalls.length === calls.length
+  const isPartiallySelected = selectedCalls.length > 0 && selectedCalls.length < calls.length
 
   return (
     <div className="min-h-screen bg-white" style={{ fontFamily: '"Lexend Deca",Helvetica,Arial,sans-serif' }}>
@@ -92,7 +202,7 @@ export function CallsPage() {
               Calls
               <ChevronDown className="w-5 h-5 text-gray-400" />
             </h1>
-            <span className="text-sm text-gray-500">2 records</span>
+            <span className="text-sm text-gray-500">{calls.length} records</span>
           </div>
           <div className="flex items-center gap-2">
             <Button variant="outline" className="text-teal border-teal hover:bg-teal/5">
@@ -145,6 +255,45 @@ export function CallsPage() {
           </Button>
         </div>
       </div>
+
+      {/* Selection Action Bar */}
+      {selectedCalls.length > 0 && (
+        <div className="border-b border-orange-200 bg-orange-50 px-6 py-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <span className="text-sm font-medium text-gray-700">
+                {selectedCalls.length} call{selectedCalls.length > 1 ? 's' : ''} selected
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleEditSelected}
+                className="text-gray-700 border-gray-300 hover:bg-gray-50"
+              >
+                <Edit className="w-4 h-4 mr-1" />
+                Edit
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleDeleteSelected}
+                className="text-red-600 border-red-300 hover:bg-red-50"
+              >
+                <Trash2 className="w-4 h-4 mr-1" />
+                Delete
+              </Button>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setSelectedCalls([])}
+              className="text-gray-500"
+            >
+              Clear selection
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Action Bar */}
       <div className="border-b border-gray-200 bg-white px-6 py-3">
@@ -269,7 +418,13 @@ export function CallsPage() {
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
                 <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  <input type="checkbox" className="mr-2" />
+                  <input 
+                    type="checkbox" 
+                    className="mr-2" 
+                    checked={isAllSelected}
+                    onChange={(e) => handleSelectAll(e.target.checked)}
+                    aria-label="Select all calls"
+                  />
                 </th>
                 <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100">
                   CALL TITLE
@@ -307,18 +462,28 @@ export function CallsPage() {
                   CALL → COMPANIES
                   <ChevronDown className="w-3 h-3 ml-1 inline" />
                 </th>
+                <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  ACTIONS
+                </th>
               </tr>
             </thead>
             
             {/* Table Body */}
             <tbody className="bg-white divide-y divide-gray-200">
-              {callData.map((call) => (
+              {calls.map((call) => (
                 <tr key={call.id} className="hover:bg-gray-50">
                   <td className="py-4 px-4">
-                    <input type="checkbox" />
+                    <input 
+                      type="checkbox"
+                      checked={selectedCalls.includes(call.id)}
+                      onChange={(e) => handleSelectCall(call.id, e.target.checked)}
+                    />
                   </td>
                   <td className="py-4 px-4">
-                    <div className="text-sm text-teal hover:underline cursor-pointer font-medium">
+                    <div 
+                      className="text-sm text-teal hover:underline cursor-pointer font-medium"
+                      onClick={() => handleCallTitleClick(call.id)}
+                    >
                       {call.title}
                     </div>
                   </td>
@@ -360,6 +525,26 @@ export function CallsPage() {
                       </span>
                     </div>
                   </td>
+                  <td className="py-4 px-4">
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleEditSingle(call.id)}
+                        className="p-1 h-auto hover:bg-gray-100"
+                      >
+                        <Edit className="w-4 h-4 text-gray-500" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDeleteSingle(call.id)}
+                        className="p-1 h-auto hover:bg-red-50"
+                      >
+                        <Trash2 className="w-4 h-4 text-red-500" />
+                      </Button>
+                    </div>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -394,6 +579,384 @@ export function CallsPage() {
           </DropdownMenu>
         </div>
       </div>
+
+      {/* Call Edit Sidebar */}
+      {showCallSidebar && getSelectedCall() && (
+        <>
+          {/* Overlay */}
+          <div 
+            className="fixed inset-0 bg-black bg-opacity-25 z-40"
+            onClick={handleCloseSidebar}
+          />
+          
+          {/* Sidebar */}
+          <div className="fixed right-0 top-0 h-full w-[400px] bg-white border-l border-gray-200 z-50 overflow-y-auto">
+            {/* Header */}
+            <div className="bg-teal text-white p-4 flex items-center justify-between">
+              <h2 className="text-lg font-medium">{getSelectedCall()?.title}</h2>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-white hover:bg-white/20 px-2 py-1 text-sm"
+                >
+                  Actions
+                  <ChevronDown className="w-3 h-3 ml-1" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleCloseSidebar}
+                  className="text-white hover:bg-white/20 p-1"
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="p-6 space-y-6">
+              {/* Call Title */}
+              <div>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  {getSelectedCall()?.title}
+                </h3>
+              </div>
+
+              {/* Call Direction */}
+              <div>
+                <h4 className="text-sm font-medium text-gray-700 mb-2">Call Direction</h4>
+                <div className="text-sm text-gray-600">--</div>
+              </div>
+
+              {/* Call Recording */}
+              <div>
+                <h4 className="text-sm font-medium text-gray-700 mb-2 flex items-center">
+                  <ChevronDown className="w-4 h-4 mr-1" />
+                  Call Recording
+                </h4>
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <div className="text-center py-8">
+                    <div className="text-6xl mb-4">🎤</div>
+                    <h5 className="font-medium text-gray-900 mb-2">No transcript available.</h5>
+                    <p className="text-sm text-gray-600">
+                      To get call transcripts, link your INTEGRATIONS_PLATFORM user account to your HubSpot account.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Call Notes */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <h4 className="text-sm font-medium text-gray-700">Call notes</h4>
+                  <Badge className="bg-red-500 text-white text-xs px-2 py-1">AI</Badge>
+                </div>
+                <div className="text-sm text-gray-600 mb-2">Generated Aug 4, 2025 ✓</div>
+                <div className="bg-gray-50 p-3 rounded border text-sm text-gray-700 leading-relaxed">
+                  {getSelectedCall()?.notes}
+                </div>
+                <div className="flex items-center gap-4 mt-3">
+                  <Button variant="ghost" size="sm" className="p-1 text-gray-500">
+                    <ThumbsUp className="w-4 h-4" />
+                  </Button>
+                  <Button variant="ghost" size="sm" className="p-1 text-gray-500">
+                    <ThumbsDown className="w-4 h-4" />
+                  </Button>
+                  <Button variant="ghost" size="sm" className="p-1 text-gray-500">
+                    <MessageCircle className="w-4 h-4" />
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="text-pink-600 border-pink-300 hover:bg-pink-50 ml-auto"
+                  >
+                    <Plus className="w-3 h-3 mr-1" />
+                    Ask a question
+                  </Button>
+                </div>
+              </div>
+
+              {/* About this Call */}
+              <div>
+                <h4 className="text-sm font-medium text-gray-700 mb-4 flex items-center">
+                  <ChevronDown className="w-4 h-4 mr-1" />
+                  About this Call
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-gray-500 hover:bg-gray-100 ml-auto px-2 py-1 text-xs"
+                  >
+                    Actions
+                    <ChevronDown className="w-3 h-3 ml-1" />
+                  </Button>
+                </h4>
+                <div className="space-y-3">
+                  <div>
+                    <div className="text-xs text-gray-500 mb-1">Activity date</div>
+                    <div className="text-sm text-gray-900">{getSelectedCall()?.date}</div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-gray-500 mb-1">Activity assigned to</div>
+                    <div className="text-sm text-gray-900">{getSelectedCall()?.assignedTo}</div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-gray-500 mb-1">Call outcome</div>
+                    <div className="text-sm text-gray-900">{getSelectedCall()?.outcome}</div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-gray-500 mb-1">Call duration</div>
+                    <div className="text-sm text-gray-900">{getSelectedCall()?.duration}</div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-gray-500 mb-1">Record source</div>
+                    <div className="text-sm text-gray-900">HubSpot Processing</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Contacts */}
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="text-sm font-medium text-gray-700 flex items-center">
+                    <ChevronDown className="w-4 h-4 mr-1" />
+                    Contacts (1)
+                  </h4>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-teal hover:bg-teal/10 px-2 py-1 text-xs"
+                  >
+                    <Plus className="w-3 h-3 mr-1" />
+                    Add
+                  </Button>
+                </div>
+                <div className="flex items-center gap-3 p-3 border rounded-lg">
+                  <div className={`w-8 h-8 rounded-full ${getSelectedCall()?.contact.color} flex items-center justify-center text-white text-sm font-semibold`}>
+                    {getSelectedCall()?.contact.name.charAt(0)}
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-sm font-medium text-teal cursor-pointer hover:underline">
+                      {getSelectedCall()?.contact.name}
+                    </div>
+                    <div className="text-xs text-gray-500">Salesperson at HubSpot</div>
+                    <div className="text-xs text-teal">emailmaria@hubspot.com</div>
+                    <div className="text-xs text-gray-500">Phone: --</div>
+                  </div>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-teal hover:bg-teal/10 w-full mt-2 text-sm"
+                >
+                  View associated contacts
+                </Button>
+              </div>
+
+              {/* Companies */}
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="text-sm font-medium text-gray-700 flex items-center">
+                    <ChevronDown className="w-4 h-4 mr-1" />
+                    Companies (1)
+                  </h4>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-teal hover:bg-teal/10 px-2 py-1 text-xs"
+                  >
+                    <Plus className="w-3 h-3 mr-1" />
+                    Add
+                  </Button>
+                </div>
+                <div className="flex items-center gap-3 p-3 border rounded-lg">
+                  <div className={`w-8 h-8 rounded-full ${getSelectedCall()?.company.color} flex items-center justify-center text-white text-sm font-semibold`}>
+                    H
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-sm font-medium text-teal cursor-pointer hover:underline">
+                      {getSelectedCall()?.company.name}
+                    </div>
+                    <div className="text-xs text-teal">hubspot.com</div>
+                    <div className="text-xs text-gray-500">Phone: --</div>
+                  </div>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-teal hover:bg-teal/10 w-full mt-2 text-sm"
+                >
+                  View associated companies
+                </Button>
+              </div>
+
+              {/* Deals */}
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="text-sm font-medium text-gray-700 flex items-center">
+                    <ChevronDown className="w-4 h-4 mr-1" />
+                    Deals (0)
+                  </h4>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-teal hover:bg-teal/10 px-2 py-1 text-xs"
+                  >
+                    <Plus className="w-3 h-3 mr-1" />
+                    Add
+                  </Button>
+                </div>
+                <p className="text-sm text-gray-600">Track the revenue opportunities associated with this record.</p>
+              </div>
+
+              {/* Tickets */}
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="text-sm font-medium text-gray-700 flex items-center">
+                    <ChevronDown className="w-4 h-4 mr-1" />
+                    Tickets (0)
+                  </h4>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-teal hover:bg-teal/10 px-2 py-1 text-xs"
+                  >
+                    <Plus className="w-3 h-3 mr-1" />
+                    Add
+                  </Button>
+                </div>
+                <p className="text-sm text-gray-600">Track the customer requests associated with this record.</p>
+              </div>
+
+              {/* Meetings */}
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="text-sm font-medium text-gray-700 flex items-center">
+                    <ChevronDown className="w-4 h-4 mr-1" />
+                    Meetings (0)
+                  </h4>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-teal hover:bg-teal/10 px-2 py-1 text-xs"
+                  >
+                    <Plus className="w-3 h-3 mr-1" />
+                    Add
+                  </Button>
+                </div>
+                <p className="text-sm text-gray-600">See the Meetings associated with this record.</p>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Bulk Edit Modal */}
+      <Dialog open={showBulkEditModal} onOpenChange={setShowBulkEditModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader className="bg-teal text-white p-4 -m-6 mb-6">
+            <div className="flex items-center justify-between">
+              <DialogTitle className="text-teal-500 font-medium">
+                Bulk edit {selectedCalls.length} record{selectedCalls.length > 1 ? 's' : ''}
+              </DialogTitle>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleBulkEditCancel}
+                className="text-white hover:bg-white/20 p-1 h-auto"
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium text-gray-700 mb-2 block">
+                Property to update
+              </label>
+              <Select value={bulkEditProperty} onValueChange={setBulkEditProperty}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Call notes">Call notes</SelectItem>
+                  <SelectItem value="Call outcome">Call outcome</SelectItem>
+                  <SelectItem value="Call direction">Call direction</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div>
+              <label className="text-sm font-medium text-gray-700 mb-2 block">
+                {bulkEditProperty}
+              </label>
+              
+              {/* Rich Text Editor Toolbar */}
+              <div className="border border-gray-300 rounded-t-md bg-gray-50 px-3 py-2 flex items-center gap-1">
+                <Button variant="ghost" size="sm" className="p-1 h-6 w-6">
+                  <Bold className="w-3 h-3" />
+                </Button>
+                <Button variant="ghost" size="sm" className="p-1 h-6 w-6">
+                  <Italic className="w-3 h-3" />
+                </Button>
+                <Button variant="ghost" size="sm" className="p-1 h-6 w-6">
+                  <Underline className="w-3 h-3" />
+                </Button>
+                <div className="w-px h-4 bg-gray-300 mx-1"></div>
+                <Button variant="ghost" size="sm" className="p-1 h-6 w-6">
+                  <AlignLeft className="w-3 h-3" />
+                </Button>
+                <Button variant="ghost" size="sm" className="p-1 h-6 w-6">
+                  <List className="w-3 h-3" />
+                </Button>
+                <div className="w-px h-4 bg-gray-300 mx-1"></div>
+                <Button variant="ghost" size="sm" className="text-teal px-2 h-6 text-xs">
+                  More
+                </Button>
+                <div className="w-px h-4 bg-gray-300 mx-1"></div>
+                <Button variant="ghost" size="sm" className="p-1 h-6 w-6">
+                  <DollarSign className="w-3 h-3" />
+                </Button>
+                <Button variant="ghost" size="sm" className="p-1 h-6 w-6">
+                  <Link className="w-3 h-3" />
+                </Button>
+              </div>
+              
+              <Textarea
+                value={bulkEditValue}
+                onChange={(e) => setBulkEditValue(e.target.value)}
+                className="min-h-[200px] rounded-t-none border-t-0 resize-none focus:ring-0"
+                placeholder=""
+              />
+              
+              <div className="flex justify-end text-xs text-gray-500 mt-1">
+                <span className="flex items-center gap-1">
+                  <span className="w-2 h-2 rounded-full bg-green-500"></span>
+                  0
+                  <span className="w-2 h-2 rounded-full bg-blue-500 ml-2"></span>
+                </span>
+              </div>
+            </div>
+          </div>
+          
+          <div className="flex justify-end gap-2 mt-6">
+            <Button
+              variant="outline"
+              onClick={handleBulkEditCancel}
+              className="border-gray-300 text-gray-700"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleBulkUpdate}
+              className="bg-orange-500 hover:bg-orange-600 text-white"
+            >
+              Update
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
