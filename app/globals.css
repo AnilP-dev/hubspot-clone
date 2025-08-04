@@ -34,13 +34,14 @@
     --hubspot-sidebar-bg: #33475b;
     --hubspot-sidebar-hover: #3e5266;
     --hubspot-sidebar-active: #4a5d72;
-    --hubspot-text-primary: #ffffff;
+    --hubspot-text-hover: #ffffff;
     --hubspot-text-secondary: #cbd5e0;
     --hubspot-text-muted: #a0aec0;
     --hubspot-orange: #ff7a59;
     --hubspot-blue: #0091ae;
     --hubspot-teal: #00a4bd;
     --hubspot-red: #e53e3e;
+    --hubspot-text-primary : rgb(51, 71, 91);
   }
 
   .dark {
@@ -77,8 +78,7 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans",
-      "Droid Sans", "Helvetica Neue", sans-serif;
+    font-family: "Lexend Deca", Helvetica, Arial, sans-serif;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
   html,
@@ -86,6 +86,7 @@
     height: 100%;
     margin: 0;
     padding: 0;
+    color : var(--hubspot-text-primary)
   }
 }
 
@@ -139,7 +140,7 @@
 }
 
 .hubspot-brand-text {
-  color: var(--hubspot-text-primary);
+  color: var(--hubspot-text-hover);
   font-size: 14px;
   font-weight: 600;
   opacity: 0;
@@ -179,12 +180,12 @@
 
 .hubspot-nav-item:hover {
   background-color: var(--hubspot-sidebar-hover);
-  color: var(--hubspot-text-primary);
+  color: var(--hubspot-text-hover);
 }
 
 .hubspot-nav-item.active {
   background-color: var(--hubspot-sidebar-active);
-  color: var(--hubspot-text-primary);
+  color: var(--hubspot-text-hover);
 }
 
 .hubspot-nav-item.expandable {
@@ -257,12 +258,12 @@
 
 .hubspot-submenu-item:hover {
   background-color: var(--hubspot-sidebar-hover);
-  color: var(--hubspot-text-primary);
+  color: var(--hubspot-text-hover);
 }
 
 .hubspot-submenu-item.active {
   background-color: var(--hubspot-sidebar-active);
-  color: var(--hubspot-text-primary);
+  color: var(--hubspot-text-hover);
 }
 
 .hubspot-submenu-icon {
@@ -355,7 +356,7 @@
 
 .hubspot-collapse-button:hover {
   background-color: rgba(255, 255, 255, 0.15);
-  color: var(--hubspot-text-primary);
+  color: var(--hubspot-text-hover);
 }
 
 .hubspot-collapse-button svg {
@@ -473,4 +474,27 @@
 
 .hubspot-link:hover {
   text-decoration: underline;
+}
+
+.inbox-field-name {
+  font-style: unset;
+  font-weight: 300;
+  text-transform: unset;
+  margin: 0px;
+  padding: 0px;
+  background-color: unset;
+  color: rgb(81, 111, 144);
+  font-family: "Lexend Deca", Helvetica, Arial, sans-serif;
+  letter-spacing: 0px;
+  line-height: 14px;
+}
+
+.playbook-icons {
+  object-fit: contain;
+  max-inline-size: 100%;
+  min-inline-size: 100px;
+  max-block-size: 120px;
+  display: inline-block;
+  box-sizing: border-box;
+  opacity: 1;
 }

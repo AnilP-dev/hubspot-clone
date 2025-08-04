@@ -24,7 +24,7 @@ import {
   AlignLeft,
 } from "lucide-react"
 import { useAppSelector, useAppDispatch } from "@/lib/store/hooks"
-import { addTask, deleteTask, deleteTasks, type Task } from "@/lib/store/slices/tasksSlice"
+import { addTask, updateTask, deleteTask, deleteTasks, type Task } from "@/lib/store/slices/tasksSlice"
 import { toast } from "sonner"
 
 export function TasksPage() {
@@ -95,6 +95,35 @@ export function TasksPage() {
     }
   }
 
+  const handleMarkAsCompleted = () => {
+    if (selectedTasks.length > 0) {
+      selectedTasks.forEach(taskId => {
+        const task = tasks.find(t => t.id === taskId)
+        if (task) {
+          dispatch(updateTask({
+            ...task,
+            status: "Completed",
+            modifiedDate: new Date().toISOString()
+          }))
+        }
+      })
+      setSelectedTasks([])
+      toast.success(`${selectedTasks.length} task(s) marked as completed`)
+    }
+  }
+
+  const handleChangeQueue = () => {
+    toast.info("Change queue functionality not implemented yet")
+  }
+
+  const handleEditSelected = () => {
+    if (selectedTasks.length === 1) {
+      toast.info("Edit functionality not implemented yet")
+    } else {
+      toast.error("Please select only one task to edit")
+    }
+  }
+
   const handleCreateTask = () => {
     const newTask: Task = {
       id: Date.now().toString(),
@@ -135,116 +164,119 @@ export function TasksPage() {
         .text-primary { color: #33475b; }
       `}</style>
 
-      {/* Header */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-        <div className="flex items-center gap-4">
+      {/* Header - Full Width */}
+      <div className="w-full px-4 py-3 border-b border-gray-200 bg-white">
+        <div className="max-w-6xl mx-auto flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-semibold text-primary">Tasks</h1>
-            <p className="text-xs text-gray-600">{tasks.length} record{tasks.length !== 1 ? 's' : ''}</p>
+            <h1 className="text-2xl font-medium text-primary">Tasks</h1>
+            <p className="text-sm text-gray-600 mt-0.5">{tasks.length} record{tasks.length !== 1 ? 's' : ''}</p>
           </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="h-8 gap-2 text-orange-500 border-orange-500 hover:text-orange-500"
-          >
-            Manage queues
-          </Button>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="h-8 gap-2 text-orange-500 border-orange-500 hover:text-orange-500"
-          >
-            Import
-          </Button>
-          <Button 
-            className="h-8 bg-orange-500 hover:bg-orange-600 text-white"
-            onClick={() => setShowCreateTask(true)}
-          >
-            Create task
-          </Button>
-        </div>
-      </div>
-
-      {/* Calendar Sync Banner */}
-      <div className="mx-6 mt-4 p-4 bg-[#E6F7FF] border border-[#91D5FF] rounded-lg">
-        <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="text-sm text-primary">
-              Want to see your tasks on your Google or Outlook calendar?
-            </span>
-            <span className="text-sm text-gray-600">
-              Connect a new calendar to sync tasks created in HubSpot.
-            </span>
-            <Button variant="link" className="p-0 h-auto text-[#00BDA5] text-sm">
-              Go to settings
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="text-orange-500 border-orange-500 hover:text-orange-500"
+            >
+              Manage queues
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="text-orange-500 border-orange-500 hover:text-orange-500"
+            >
+              Import
+            </Button>
+            <Button 
+              className="bg-orange-500 hover:bg-orange-600 text-white"
+              onClick={() => setShowCreateTask(true)}
+            >
+              Create task
             </Button>
           </div>
-          <Button variant="ghost" size="sm" className="p-1">
-            <X className="w-4 h-4" />
-          </Button>
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex items-center justify-between px-6 py-3 border-b border-gray-200">
-        <div className="flex items-center gap-6">
-          <button
-            className={`px-3 py-2 text-sm font-medium border-b-2 ${
-              activeTab === "all"
-                ? "border-[#00BDA5] text-[#00BDA5]"
-                : "border-transparent text-gray-600 hover:text-gray-900"
-            }`}
-            onClick={() => setActiveTab("all")}
-          >
-            All
-            <X className="w-4 h-4 ml-2 inline" />
-          </button>
-          <button
-            className={`px-3 py-2 text-sm font-medium border-b-2 ${
-              activeTab === "due-today"
-                ? "border-[#00BDA5] text-[#00BDA5]"
-                : "border-transparent text-gray-600 hover:text-gray-900"
-            }`}
-            onClick={() => setActiveTab("due-today")}
-          >
-            Due today
-          </button>
-          <button
-            className={`px-3 py-2 text-sm font-medium border-b-2 ${
-              activeTab === "overdue"
-                ? "border-[#00BDA5] text-[#00BDA5]"
-                : "border-transparent text-gray-600 hover:text-gray-900"
-            }`}
-            onClick={() => setActiveTab("overdue")}
-          >
-            Overdue
-          </button>
-          <button
-            className={`px-3 py-2 text-sm font-medium border-b-2 ${
-              activeTab === "upcoming"
-                ? "border-[#00BDA5] text-[#00BDA5]"
-                : "border-transparent text-gray-600 hover:text-gray-900"
-            }`}
-            onClick={() => setActiveTab("upcoming")}
-          >
-            Upcoming
-          </button>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="sm" className="gap-2 text-[#00BDA5] hover:text-[#00BDA5]/80">
-            <Plus className="w-4 h-4" />
-            Add view (4/5)
-          </Button>
-          <Button variant="ghost" size="sm" className="text-[#00BDA5] hover:text-[#00BDA5]/80">
-            All Views
-          </Button>
-        </div>
-      </div>
+      {/* Centered Container for Content */}
+      <div className="flex justify-center w-full bg-white flex-1">
+        <div className="w-full max-w-7xl mx-auto bg-white">
+          {/* Calendar Sync Banner */}
+          <div className="mx-4 mt-2 p-2 bg-[#E6F7FF] border border-[#91D5FF] rounded-lg">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-primary">
+                  Want to see your tasks on your Google or Outlook calendar?
+                </span>
+                <span className="text-sm text-gray-600">
+                  Connect a new calendar to sync tasks created in HubSpot.
+                </span>
+                <Button variant="link" className="p-0 h-auto text-teal-500 text-sm">
+                  Go to settings
+                </Button>
+              </div>
+              <Button variant="ghost" size="sm" className="p-1">
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
 
-      {/* Filters */}
-      <div className="flex items-center gap-4 px-6 py-3 border-b border-gray-200">
+          {/* Tabs */}
+          <div className="flex items-center justify-between px-4 py-1.5 border-b border-gray-200">
+            <div className="flex items-center gap-6">
+              <button
+                className={`px-3 py-2 text-sm font-medium border-b-2 ${
+                  activeTab === "all"
+                    ? "border-teal-500 text-teal-500"
+                    : "border-transparent text-gray-600 hover:text-gray-900"
+                }`}
+                onClick={() => setActiveTab("all")}
+              >
+                All
+                <X className="w-4 h-4 ml-2 inline" />
+              </button>
+              <button
+                className={`px-3 py-2 text-sm font-medium border-b-2 ${
+                  activeTab === "due-today"
+                    ? "border-teal-500 text-teal-500"
+                    : "border-transparent text-gray-600 hover:text-gray-900"
+                }`}
+                onClick={() => setActiveTab("due-today")}
+              >
+                Due today
+              </button>
+              <button
+                className={`px-3 py-2 text-sm font-medium border-b-2 ${
+                  activeTab === "overdue"
+                    ? "border-teal-500 text-teal-500"
+                    : "border-transparent text-gray-600 hover:text-gray-900"
+                }`}
+                onClick={() => setActiveTab("overdue")}
+              >
+                Overdue
+              </button>
+              <button
+                className={`px-3 py-2 text-sm font-medium border-b-2 ${
+                  activeTab === "upcoming"
+                    ? "border-teal-500 text-teal-500"
+                    : "border-transparent text-gray-600 hover:text-gray-900"
+                }`}
+                onClick={() => setActiveTab("upcoming")}
+              >
+                Upcoming
+              </button>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="sm" className="gap-2 text-teal-500 hover:text-teal-600">
+                <Plus className="w-4 h-4" />
+                Add view (4/5)
+              </Button>
+              <Button variant="ghost" size="sm" className="text-teal-500 hover:text-teal-600">
+                All Views
+              </Button>
+            </div>
+          </div>
+
+          {/* Filters */}
+          <div className="flex items-center gap-4 px-4 py-1.5 border-b border-gray-200">
         <Select>
           <SelectTrigger className="w-32">
             <SelectValue placeholder="(1) Assignee" />
@@ -286,43 +318,88 @@ export function TasksPage() {
             <SelectItem value="none">No queue</SelectItem>
           </SelectContent>
         </Select>
-        <Button variant="ghost" size="sm" className="gap-2 text-[#00BDA5] hover:text-[#00BDA5]/80">
-          <Plus className="w-4 h-4" />
-          More filters
-        </Button>
-      </div>
+            <Button variant="ghost" size="sm" className="gap-2 text-teal-500 hover:text-teal-600">
+              <Plus className="w-4 h-4" />
+              More filters
+            </Button>
+          </div>
 
-      {/* Search and Actions */}
-      <div className="flex items-center justify-between px-6 py-3 border-b border-gray-200">
-        <div className="relative w-80">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-          <Input
-            placeholder="Search task title and notes"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-          />
-        </div>
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="sm" className="gap-2 text-[#00BDA5] hover:text-[#00BDA5]/80">
-            Save view
-          </Button>
-          <Button variant="ghost" size="sm" className="gap-2 text-orange-500 hover:text-orange-600">
-            Start 1 task
-            <Calendar className="w-4 h-4" />
-          </Button>
-          <Button variant="ghost" size="sm" className="text-gray-600 hover:text-gray-700">
-            Edit columns
-          </Button>
-        </div>
-      </div>
+          {/* Search and Actions */}
+          <div className="flex items-center justify-between px-4 py-1.5 border-b border-gray-200">
+            <div className="relative w-80">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <Input
+                placeholder="Search task title and notes"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="sm" className="gap-2 text-teal-500 hover:text-teal-600">
+                Save view
+              </Button>
+              <Button variant="ghost" size="sm" className="gap-2 text-orange-500 hover:text-orange-600">
+                Start 1 task
+                <Calendar className="w-4 h-4" />
+              </Button>
+              <Button variant="ghost" size="sm" className="text-gray-600 hover:text-gray-700">
+                Edit columns
+              </Button>
+            </div>
+          </div>
 
-      {/* Table */}
-      <div className="flex-1 overflow-auto">
+          {/* Selection Actions Bar */}
+          {selectedTasks.length > 0 && (
+            <div className="flex items-center justify-between px-4 py-1.5 bg-[#E6F7FF] border-b border-gray-200">
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-primary font-medium">
+                  {selectedTasks.length} selected
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={handleMarkAsCompleted}
+                  className="text-gray-700 hover:text-gray-900"
+                >
+                  Mark as completed
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={handleEditSelected}
+                  className="text-gray-700 hover:text-gray-900"
+                >
+                  Edit
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={handleDeleteSelected}
+                  className="text-gray-700 hover:text-gray-900"
+                >
+                  Delete
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={handleChangeQueue}
+                  className="text-gray-700 hover:text-gray-900"
+                >
+                  Change queue
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Table */}
+          <div className="flex-1 overflow-auto border-l border-r border-gray-200">
         <Table>
           <TableHeader>
             <TableRow className="bg-gray-50 text-xs">
-              <TableHead className="w-12">
+              <TableHead className="w-12 px-2">
                 <Checkbox
                   checked={selectedTasks.length === displayTasks.length && displayTasks.length > 0}
                   onCheckedChange={handleSelectAll}
@@ -366,7 +443,7 @@ export function TasksPage() {
           <TableBody>
             {displayTasks.map((task) => (
               <TableRow key={task.id} className="hover:bg-gray-50">
-                <TableCell>
+                <TableCell className="px-2">
                   <Checkbox
                     checked={selectedTasks.includes(task.id)}
                     onCheckedChange={(checked) => handleSelectTask(task.id, checked as boolean)}
@@ -376,7 +453,7 @@ export function TasksPage() {
                   <div className="w-3 h-3 rounded-full bg-gray-300"></div>
                 </TableCell>
                 <TableCell>
-                  <button className="font-medium text-left hover:text-[#00BDA5] text-[#00BDA5]">
+                  <button className="font-medium text-left text-teal-500 hover:text-teal-600">
                     {task.title}
                   </button>
                 </TableCell>
@@ -393,30 +470,32 @@ export function TasksPage() {
               </TableRow>
             ))}
           </TableBody>
-        </Table>
-      </div>
+          </Table>
+          </div>
 
-      {/* Pagination */}
-      <div className="flex items-center justify-between px-6 py-3 border-t border-gray-200">
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="sm" disabled>
-            Prev
-          </Button>
-          <span className="text-sm text-gray-600">1</span>
-          <Button variant="ghost" size="sm" disabled>
-            Next
-          </Button>
+          {/* Pagination */}
+          <div className="flex items-center justify-between px-4 py-1.5 border-t border-gray-200">
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="sm" disabled>
+                Prev
+              </Button>
+              <span className="text-sm text-gray-600">1</span>
+              <Button variant="ghost" size="sm" disabled>
+                Next
+              </Button>
+            </div>
+            <Select>
+              <SelectTrigger className="w-32">
+                <SelectValue placeholder="25 per page" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="25">25 per page</SelectItem>
+                <SelectItem value="50">50 per page</SelectItem>
+                <SelectItem value="100">100 per page</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
-        <Select>
-          <SelectTrigger className="w-32">
-            <SelectValue placeholder="25 per page" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="25">25 per page</SelectItem>
-            <SelectItem value="50">50 per page</SelectItem>
-            <SelectItem value="100">100 per page</SelectItem>
-          </SelectContent>
-        </Select>
       </div>
 
       {/* Create Task Sidebar */}
