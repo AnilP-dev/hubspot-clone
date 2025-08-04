@@ -3,6 +3,7 @@ import contactsReducer from "./slices/contactsSlice"
 import companiesReducer from "./slices/companiesSlice"
 import dealsReducer from "./slices/dealsSlice"
 import ticketsReducer from "./slices/ticketsSlice"
+import listsReducer from "./slices/listsSlice"
 
 export const store = configureStore({
   reducer: {
@@ -10,6 +11,7 @@ export const store = configureStore({
     companies: companiesReducer,
     deals: dealsReducer,
     tickets: ticketsReducer,
+    lists: listsReducer,
   },
 })
 
