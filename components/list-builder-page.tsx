@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, Suspense } from "react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
@@ -61,7 +61,7 @@ const getEstimatedSize = (type: string, allState: any) => {
   }
 }
 
-export function ListBuilderPage() {
+function ListBuilderContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const dispatch = useAppDispatch()
@@ -372,5 +372,13 @@ export function ListBuilderPage() {
         </div>
       )}
     </div>
+  )
+}
+
+export function ListBuilderPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <ListBuilderContent />
+    </Suspense>
   )
 }

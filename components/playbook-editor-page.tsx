@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef, useEffect, Suspense } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -41,7 +41,7 @@ interface TextBlock {
 
 type ContentBlock = QuestionBlock | TextBlock
 
-export function PlaybookEditorPage() {
+function PlaybookEditorContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const dispatch = useAppDispatch()
@@ -500,5 +500,13 @@ export function PlaybookEditorPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export function PlaybookEditorPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <PlaybookEditorContent />
+    </Suspense>
   )
 }
