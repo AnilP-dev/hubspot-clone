@@ -475,3 +475,26 @@
 .hubspot-link:hover {
   text-decoration: underline;
 }
+
+.inbox-field-name {
+  font-style: unset;
+  font-weight: 300;
+  text-transform: unset;
+  margin: 0px;
+  padding: 0px;
+  background-color: unset;
+  color: rgb(81, 111, 144);
+  font-family: "Lexend Deca", Helvetica, Arial, sans-serif;
+  letter-spacing: 0px;
+  line-height: 14px;
+}
+
+.playbook-icons {
+  object-fit: contain;
+  max-inline-size: 100%;
+  min-inline-size: 100px;
+  max-block-size: 120px;
+  display: inline-block;
+  box-sizing: border-box;
+  opacity: 1;
+}

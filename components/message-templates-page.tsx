@@ -1,0 +1,273 @@
+"use client"
+
+import { useState } from "react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Checkbox } from "@/components/ui/checkbox"
+import {
+  Search,
+  ArrowUpDown,
+  Plus,
+  FolderPlus,
+  BarChart3,
+  FolderOpen,
+  Trash2,
+} from "lucide-react"
+import { useAppSelector, useAppDispatch } from "@/lib/store/hooks"
+import { addTemplate, updateTemplate, deleteTemplates, type MessageTemplate } from "@/lib/store/slices/messageTemplatesSlice"
+import { toast } from "sonner"
+import { NewTemplateModal } from "./new-template-modal"
+
+export function MessageTemplatesPage() {
+  const dispatch = useAppDispatch()
+  const { templates } = useAppSelector((state) => state.messageTemplates)
+  const [searchTerm, setSearchTerm] = useState("")
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [selectedTemplates, setSelectedTemplates] = useState<string[]>([])
+  const [editingTemplate, setEditingTemplate] = useState<MessageTemplate | null>(null)
+
+  const filteredTemplates = templates.filter((template) =>
+    template.name.toLowerCase().includes(searchTerm.toLowerCase())
+  )
+
+  const handleNewTemplate = () => {
+    setIsModalOpen(true)
+  }
+
+  const handleSaveTemplate = (templateData: Omit<MessageTemplate, 'id' | 'dateCreated' | 'dateModified'>) => {
+    if (editingTemplate) {
+      // Update existing template
+      const updatedTemplate: MessageTemplate = {
+        ...editingTemplate,
+        ...templateData,
+        dateModified: "a few seconds ago",
+      }
+      dispatch(updateTemplate(updatedTemplate))
+      toast.success("Template updated successfully!")
+      setEditingTemplate(null)
+    } else {
+      // Create new template
+      const newTemplate: MessageTemplate = {
+        ...templateData,
+        id: `template_${Date.now()}`,
+        dateCreated: "a few seconds ago",
+        dateModified: "a few seconds ago",
+      }
+      dispatch(addTemplate(newTemplate))
+      toast.success("Template created successfully!")
+    }
+    setIsModalOpen(false)
+  }
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedTemplates(filteredTemplates.map((template) => template.id))
+    } else {
+      setSelectedTemplates([])
+    }
+  }
+
+  const handleSelectTemplate = (templateId: string, checked: boolean) => {
+    if (checked) {
+      setSelectedTemplates([...selectedTemplates, templateId])
+    } else {
+      setSelectedTemplates(selectedTemplates.filter((id) => id !== templateId))
+    }
+  }
+
+  const handleDeleteSelected = () => {
+    if (selectedTemplates.length > 0) {
+      dispatch(deleteTemplates(selectedTemplates))
+      setSelectedTemplates([])
+      toast.success(`${selectedTemplates.length} template(s) deleted successfully`)
+    }
+  }
+
+  const handleTemplateClick = (template: MessageTemplate) => {
+    setEditingTemplate(template)
+    setIsModalOpen(true)
+  }
+
+  return (
+    <div className="flex flex-col h-full bg-white" style={{ fontFamily: '"Lexend Deca",Helvetica,Arial,sans-serif' }}>
+      <style jsx>{`
+        * {
+          font-family: "Lexend Deca", Helvetica, Arial, sans-serif;
+        }
+        .text-primary { color: #33475b; }
+        .text-teal { color: #00BDA5; }
+        .bg-teal { background-color: #00BDA5; }
+        .border-teal { border-color: #00BDA5; }
+        .text-orange { color: #FF7A00; }
+        .bg-orange { background-color: #FF7A00; }
+      `}</style>
+
+      {/* Header - Full Width */}
+      <div className="w-full px-8 py-6 border-b border-gray-200 bg-white">
+        <div className="max-w-6xl mx-auto flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-medium text-primary">Message templates</h1>
+            <p className="text-sm text-gray-600 mt-1">1 of 5,000 created</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" className="text-gray-600 border-gray-300">
+              <FolderPlus className="w-4 h-4 mr-2" />
+              New folder
+            </Button>
+            <Button variant="outline" size="sm" className="text-gray-600 border-gray-300">
+              <BarChart3 className="w-4 h-4 mr-2" />
+              Analyze
+            </Button>
+            <Button 
+              variant="default" 
+              size="sm" 
+              className="bg-orange-500 text-white hover:bg-orange/90"
+              onClick={handleNewTemplate}
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              New template
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* Centered Container for Content */}
+      <div className="flex justify-center w-full bg-white flex-1">
+        <div className="w-full max-w-6xl mx-auto bg-white">
+          {/* Search and Filters */}
+          <div className="px-8 py-4 border-b border-gray-200">
+            <div className="flex items-center gap-4">
+              <div className="relative w-80">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <Input
+                  placeholder="Search templates"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              <Select>
+                <SelectTrigger className="w-32">
+                  <SelectValue placeholder="Owner: Any" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="any">Any</SelectItem>
+                  <SelectItem value="me">Me</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* Action Bar - shown when templates are selected */}
+          {selectedTemplates.length > 0 && (
+            <div className="px-8 py-3 border-b border-gray-200 bg-blue-50">
+              <div className="flex items-center gap-4">
+                <span className="text-sm text-gray-700">
+                  {selectedTemplates.length} selected
+                </span>
+                <Button variant="ghost" size="sm" className="text-teal-500 hover:bg-teal-50 flex items-center gap-2">
+                  <FolderOpen className="w-4 h-4" />
+                  Move to folder
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="text-red-600 hover:bg-red-50 flex items-center gap-2"
+                  onClick={handleDeleteSelected}
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Delete
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Table */}
+          <div className="flex-1 overflow-auto border-l border-r border-gray-200">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-gray-50">
+                  <TableHead className="w-12 px-4">
+                    <Checkbox
+                      checked={selectedTemplates.length === filteredTemplates.length && filteredTemplates.length > 0}
+                      onCheckedChange={handleSelectAll}
+                    />
+                  </TableHead>
+                  <TableHead className="font-medium text-gray-900 text-left px-4">
+                    <div className="flex items-center gap-1 cursor-pointer">
+                      NAME
+                      <ArrowUpDown className="w-3 h-3" />
+                    </div>
+                  </TableHead>
+                  <TableHead className="font-medium text-gray-900 text-center">
+                    <div className="flex items-center gap-1 cursor-pointer justify-center">
+                      OWNER
+                      <ArrowUpDown className="w-3 h-3" />
+                    </div>
+                  </TableHead>
+                  <TableHead className="font-medium text-gray-900 text-center">
+                    <div className="flex items-center gap-1 cursor-pointer justify-center">
+                      DATE CREATED
+                      <ArrowUpDown className="w-3 h-3" />
+                    </div>
+                  </TableHead>
+                  <TableHead className="font-medium text-gray-900 text-center px-4">
+                    <div className="flex items-center gap-1 cursor-pointer justify-center">
+                      DATE MODIFIED
+                      <ArrowUpDown className="w-3 h-3" />
+                    </div>
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredTemplates.map((template) => (
+                  <TableRow key={template.id} className="hover:bg-gray-50">
+                    <TableCell className="px-4">
+                      <Checkbox
+                        checked={selectedTemplates.includes(template.id)}
+                        onCheckedChange={(checked) => handleSelectTemplate(template.id, checked as boolean)}
+                      />
+                    </TableCell>
+                    <TableCell className="px-4">
+                      <button 
+                        className="font-medium text-left text-teal-500 hover:text-teal-600"
+                        onClick={() => handleTemplateClick(template)}
+                      >
+                        {template.name}
+                      </button>
+                    </TableCell>
+                    <TableCell className="text-center text-gray-900">{template.owner}</TableCell>
+                    <TableCell className="text-center text-gray-900">{template.dateCreated}</TableCell>
+                    <TableCell className="text-center text-gray-900 px-4">{template.dateModified}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+
+          {/* Footer */}
+          <div className="px-8 py-3 border-t border-gray-200">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-600">
+                Showing {filteredTemplates.length} of {templates.length} templates
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* New Template Modal */}
+      <NewTemplateModal 
+        isOpen={isModalOpen}
+        onClose={() => {
+          setIsModalOpen(false)
+          setEditingTemplate(null)
+        }}
+        onSave={handleSaveTemplate}
+        editingTemplate={editingTemplate}
+      />
+    </div>
+  )
+}
