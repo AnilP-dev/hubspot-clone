@@ -34,6 +34,7 @@ import {
   applyFilters,
 } from "@/lib/store/slices/ticketsSlice"
 import { CreateTicketModal } from "./create-ticket-modal"
+import { CrmNavigationDropdown } from "./crm-navigation-dropdown"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
 import type { FilterType } from "@/lib/types"
@@ -146,10 +147,7 @@ export function TicketsPage() {
       <div className="border-b border-gray-200 p-6">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="text-2xl font-semibold text-teal-600 flex items-center gap-2">
-              Tickets
-              <ChevronDown className="h-5 w-5" />
-            </h1>
+            <CrmNavigationDropdown currentTitle="Tickets" recordCount={filteredTickets.length} />
             <p className="text-sm text-gray-500 mt-1">
               {filteredTickets.length} record{filteredTickets.length !== 1 ? "s" : ""}
             </p>

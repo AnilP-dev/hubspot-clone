@@ -21,6 +21,7 @@ import {
 import { useAppSelector, useAppDispatch } from "@/lib/store/hooks"
 import { deleteContact, deleteContacts } from "@/lib/store/slices/contactsSlice"
 import { CreateContactModal } from "./create-contact-modal"
+import { CrmNavigationDropdown } from "./crm-navigation-dropdown"
 import { toast } from "sonner"
 
 export function ContactsPage() {
@@ -128,11 +129,8 @@ export function ContactsPage() {
       <div className="mb-6">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="text-2xl font-semibold text-gray-900 flex items-center gap-2">
-              Contacts
-              <ChevronDown className="h-5 w-5 text-gray-500" />
-            </h1>
-            <p className="text-sm text-gray-600">
+            <CrmNavigationDropdown currentTitle="Contacts" recordCount={contacts.length} />
+            <p className="text-sm text-gray-600 mt-1">
               {contacts.length} record{contacts.length !== 1 ? "s" : ""}
             </p>
           </div>

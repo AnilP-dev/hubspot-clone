@@ -92,7 +92,7 @@
 
 /* HubSpot Custom Styles */
 .hubspot-sidebar {
-  background-color: var(--hubspot-sidebar-bg);
+  background-color: #33475b;
   width: 56px;
   min-width: 56px;
   height: 100vh;
@@ -117,26 +117,21 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  min-height: 64px;
+  min-height: 56px;
 }
 
 .hubspot-logo {
   width: 24px;
   height: 24px;
-  background-color: var(--hubspot-orange);
-  border-radius: 4px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
 }
 
-.hubspot-logo::after {
-  content: "";
-  width: 12px;
-  height: 12px;
-  background-color: white;
-  border-radius: 2px;
+.hubspot-logo svg {
+  width: 20px;
+  height: 20px;
 }
 
 .hubspot-brand-text {
@@ -403,8 +398,11 @@
   font-size: 13px !important;
   font-weight: 500 !important;
   padding: 6px 12px !important;
-  height: 28px !important;
-  border-radius: 4px !important;
+  height: 32px !important;
+  border-radius: 6px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 4px !important;
 }
 
 .hubspot-upgrade-btn:hover {
@@ -418,11 +416,11 @@
   font-size: 13px !important;
   font-weight: 500 !important;
   padding: 6px 12px !important;
-  height: 28px !important;
-  border-radius: 4px !important;
+  height: 32px !important;
+  border-radius: 6px !important;
   display: flex !important;
   align-items: center !important;
-  gap: 6px !important;
+  gap: 4px !important;
 }
 
 .hubspot-copilot-btn:hover {
@@ -436,8 +434,8 @@
   font-size: 13px !important;
   font-weight: 400 !important;
   padding: 4px 8px !important;
-  height: 28px !important;
-  border-radius: 4px !important;
+  height: 32px !important;
+  border-radius: 6px !important;
   display: flex !important;
   align-items: center !important;
   gap: 8px !important;
