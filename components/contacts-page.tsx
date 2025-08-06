@@ -19,8 +19,9 @@ import {
   Trash2,
 } from "lucide-react"
 import { useAppSelector, useAppDispatch } from "@/lib/store/hooks"
-import { deleteContact, deleteContacts } from "@/lib/store/slices/contactsSlice"
+import { deleteContact, deleteContacts, type Contact } from "@/lib/store/slices/contactsSlice"
 import { CreateContactModal } from "./create-contact-modal"
+import { UpdateContactModal } from "./update-contact-modal"
 import { CrmNavigationDropdown } from "./crm-navigation-dropdown"
 import { toast } from "sonner"
 
@@ -30,6 +31,8 @@ export function ContactsPage() {
   const [selectedContacts, setSelectedContacts] = useState<string[]>([])
   const [searchTerm, setSearchTerm] = useState("")
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const [showUpdateModal, setShowUpdateModal] = useState(false)
+  const [selectedContact, setSelectedContact] = useState<Contact | null>(null)
   const [viewMode, setViewMode] = useState<"list" | "grid">("list")
 
   const filteredContacts = contacts.filter(
@@ -66,6 +69,11 @@ export function ContactsPage() {
   const handleDeleteContact = (contactId: string) => {
     dispatch(deleteContact(contactId))
     toast.success("Contact deleted successfully")
+  }
+
+  const handleContactClick = (contact: Contact) => {
+    setSelectedContact(contact)
+    setShowUpdateModal(true)
   }
 
   const handleExportContacts = () => {
@@ -328,14 +336,24 @@ export function ContactsPage() {
                       alt={contact.name}
                       className="w-8 h-8 rounded-full"
                     />
-                    <span className="text-[#00BDA5] hover:underline cursor-pointer font-medium">{contact.name}</span>
+                    <span 
+                      className="text-[#00BDA5] hover:underline cursor-pointer font-medium"
+                      onClick={() => handleContactClick(contact)}
+                    >
+                      {contact.name}
+                    </span>
                   </div>
                 </TableCell>
                 <TableCell>
                   <span className="text-gray-900">{contact.phone}</span>
                 </TableCell>
                 <TableCell>
-                  <span className="text-[#00BDA5] hover:underline cursor-pointer">{contact.email}</span>
+                  <span 
+                    className="text-[#00BDA5] hover:underline cursor-pointer"
+                    onClick={() => handleContactClick(contact)}
+                  >
+                    {contact.email}
+                  </span>
                 </TableCell>
                 <TableCell>
                   <span className="text-gray-900">{contact.leadStatus}</span>
@@ -394,6 +412,13 @@ export function ContactsPage() {
 
       {/* Create Contact Modal */}
       <CreateContactModal open={showCreateModal} onOpenChange={setShowCreateModal} />
+      
+      {/* Update Contact Modal */}
+      <UpdateContactModal 
+        open={showUpdateModal} 
+        onOpenChange={setShowUpdateModal} 
+        contact={selectedContact}
+      />
     </div>
   )
 }
