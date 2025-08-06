@@ -38,12 +38,14 @@ const navigationItems = [
     title: "Bookmarks",
     icon: Bookmark,
     href: "/bookmarks",
+    disabled: true,
   },
   {
     id: "crm",
     title: "CRM",
     icon: Users,
     isExpandable: true,
+    disabled: false,
     items: [
       { title: "Contacts", href: "/crm/contacts", icon: Users },
       { title: "Companies", href: "/crm/companies", icon: Building2 },
@@ -63,72 +65,84 @@ const navigationItems = [
     title: "Marketing",
     icon: TrendingUp,
     href: "/marketing",
+    disabled: true,
   },
   {
     id: "content",
     title: "Content",
     icon: FileText,
     href: "/content",
+    disabled: true,
   },
   {
     id: "sales",
     title: "Sales",
     icon: DollarSign,
     href: "/sales",
+    disabled: true,
   },
   {
     id: "commerce",
     title: "Commerce",
     icon: ShoppingCart,
     href: "/commerce",
+    disabled: true,
   },
   {
     id: "service",
     title: "Service",
     icon: Headphones,
     href: "/service",
+    disabled: true,
   },
   {
     id: "data",
     title: "Data Management",
     icon: Database,
     href: "/data",
+    disabled: true,
   },
   {
     id: "automation",
     title: "Automation",
     icon: Zap,
     href: "/automation",
+    disabled: true,
   },
   {
     id: "reporting",
     title: "Reporting",
     icon: BarChart3,
     href: "/reporting",
+    disabled: true,
   },
   {
     id: "contacts-2",
     title: "Contacts",
     icon: Users2,
     href: "/contacts-2",
+    disabled: true,
   },
   {
     id: "analytics",
     title: "Analytics",
     icon: BarChart,
     href: "/analytics",
+    disabled: true,
   },
   {
     id: "settings",
     title: "Settings",
     icon: Settings,
     href: "/settings",
+    disabled: true,
   },
   {
     id: "add",
     title: "Add",
     icon: Plus,
     href: "/add",
+    disabled: true,
   },
 ]
 
@@ -153,6 +167,10 @@ export function HubSpotSidebar({ isExpanded, onToggle }: HubSpotSidebarProps) {
   }
 
   const handleItemClick = (item: any) => {
+    if (item.disabled) {
+      return // Don't do anything if item is disabled
+    }
+    
     if (item.isExpandable) {
       toggleSection(item.id)
     }
@@ -170,10 +188,13 @@ export function HubSpotSidebar({ isExpanded, onToggle }: HubSpotSidebarProps) {
       <div className="hubspot-sidebar-content">
         {/* Bookmarks Section */}
         <div className="hubspot-nav-section">
-          <Link href="/bookmarks" className={`hubspot-nav-item ${pathname === "/bookmarks" ? "active" : ""}`}>
+          <div className={`hubspot-nav-item ${pathname === "/bookmarks" ? "active" : ""} ${navigationItems[0].disabled ? "disabled" : ""}`}>
             <Bookmark className="hubspot-nav-icon" />
             <span className="hubspot-nav-text">Bookmarks</span>
-          </Link>
+            {navigationItems[0].disabled && (
+              <span className="hubspot-disabled-badge">Coming Soon</span>
+            )}
+          </div>
         </div>
 
         {/* Main Navigation */}
@@ -184,7 +205,8 @@ export function HubSpotSidebar({ isExpanded, onToggle }: HubSpotSidebarProps) {
                 <>
                   <button
                     onClick={() => handleItemClick(item)}
-                    className={`hubspot-nav-item expandable ${pathname.startsWith("/crm") ? "active" : ""}`}
+                    className={`hubspot-nav-item expandable ${pathname.startsWith("/crm") ? "active" : ""} ${item.disabled ? "disabled" : ""}`}
+                    disabled={item.disabled}
                   >
                     <div style={{ display: "flex", alignItems: "center" }}>
                       <item.icon className="hubspot-nav-icon" />
@@ -211,10 +233,13 @@ export function HubSpotSidebar({ isExpanded, onToggle }: HubSpotSidebarProps) {
                   </div>
                 </>
               ) : (
-                <Link href={item.href || "#"} className={`hubspot-nav-item ${pathname === item.href ? "active" : ""}`}>
+                <div className={`hubspot-nav-item ${pathname === item.href ? "active" : ""} ${item.disabled ? "disabled" : ""}`}>
                   <item.icon className="hubspot-nav-icon" />
                   <span className="hubspot-nav-text">{item.title}</span>
-                </Link>
+                  {item.disabled && (
+                    <span className="hubspot-disabled-badge">Coming Soon</span>
+                  )}
+                </div>
               )}
             </div>
           ))}
