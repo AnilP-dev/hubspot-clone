@@ -175,19 +175,19 @@ export function TasksPage() {
             <Button 
               variant="outline" 
               size="sm" 
-              className="text-orange-500 border-orange-500 hover:text-orange-500"
+              className="h-8 gap-2 text-orange-500 border border-orange-500 hover:text-orange-500 font-light text-xs tracking-normal leading-4 rounded-sm bg-transparent"
             >
               Manage queues
             </Button>
             <Button 
               variant="outline" 
               size="sm" 
-              className="text-orange-500 border-orange-500 hover:text-orange-500"
+              className="h-8 gap-2 text-orange-500 border border-orange-500 hover:text-orange-500 font-light text-xs tracking-normal leading-4 rounded-sm bg-transparent"
             >
               Import
             </Button>
             <Button 
-              className="bg-orange-500 hover:bg-orange-600 text-white"
+              className="bg-orange-500 hover:bg-orange-700 text-white rounded-sm h-8"
               onClick={() => setShowCreateTask(true)}
             >
               Create task

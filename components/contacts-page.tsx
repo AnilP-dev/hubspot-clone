@@ -19,8 +19,10 @@ import {
   Trash2,
 } from "lucide-react"
 import { useAppSelector, useAppDispatch } from "@/lib/store/hooks"
-import { deleteContact, deleteContacts } from "@/lib/store/slices/contactsSlice"
+import { deleteContact, deleteContacts, type Contact } from "@/lib/store/slices/contactsSlice"
 import { CreateContactModal } from "./create-contact-modal"
+import { UpdateContactModal } from "./update-contact-modal"
+import { CrmNavigationDropdown } from "./crm-navigation-dropdown"
 import { toast } from "sonner"
 
 export function ContactsPage() {
@@ -29,6 +31,8 @@ export function ContactsPage() {
   const [selectedContacts, setSelectedContacts] = useState<string[]>([])
   const [searchTerm, setSearchTerm] = useState("")
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const [showUpdateModal, setShowUpdateModal] = useState(false)
+  const [selectedContact, setSelectedContact] = useState<Contact | null>(null)
   const [viewMode, setViewMode] = useState<"list" | "grid">("list")
 
   const filteredContacts = contacts.filter(
@@ -65,6 +69,11 @@ export function ContactsPage() {
   const handleDeleteContact = (contactId: string) => {
     dispatch(deleteContact(contactId))
     toast.success("Contact deleted successfully")
+  }
+
+  const handleContactClick = (contact: Contact) => {
+    setSelectedContact(contact)
+    setShowUpdateModal(true)
   }
 
   const handleExportContacts = () => {
@@ -128,23 +137,20 @@ export function ContactsPage() {
       <div className="mb-6">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="text-2xl font-semibold text-gray-900 flex items-center gap-2">
-              Contacts
-              <ChevronDown className="h-5 w-5 text-gray-500" />
-            </h1>
-            <p className="text-sm text-gray-600">
+            <CrmNavigationDropdown currentTitle="Contacts" recordCount={contacts.length} />
+            <p className="text-sm text-gray-600 mt-1">
               {contacts.length} record{contacts.length !== 1 ? "s" : ""}
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="outline" className="text-orange-600 border-orange-600 hover:bg-orange-50 bg-transparent">
+            <Button variant="outline" className="h-8 gap-2 text-orange-500 border border-orange-500 hover:text-orange-500 font-light text-xs tracking-normal leading-4 rounded-sm bg-transparent">
               Actions
-              <ChevronDown className="h-4 w-4 ml-1" />
+              <ChevronDown className="h-4 w-4" />
             </Button>
-            <Button variant="outline" className="text-orange-600 border-orange-600 hover:bg-orange-50 bg-transparent">
+            <Button variant="outline" className="h-8 gap-2 text-orange-500 border border-orange-500 hover:text-orange-500 font-light text-xs tracking-normal leading-4 rounded-sm bg-transparent">
               Import
             </Button>
-            <Button onClick={() => setShowCreateModal(true)} className="bg-orange-600 hover:bg-orange-700 text-white">
+            <Button onClick={() => setShowCreateModal(true)} className="bg-orange-500 hover:bg-orange-700 text-white rounded-sm h-8">
               Create contact
             </Button>
           </div>
@@ -227,13 +233,13 @@ export function ContactsPage() {
               </SelectContent>
             </Select>
 
-            <Button variant="outline" className="text-[#00BDA5] border-[#00BDA5] hover:bg-[#00BDA5]/5 bg-transparent">
-              <Plus className="h-4 w-4 mr-1" />
+            <Button variant="ghost" size="sm" className="gap-2 hover:text-[#00BDA5]" style={{ color: '#00BDA5' }}>
+              <Plus className="w-4 h-4" />
               More
             </Button>
 
-            <Button variant="outline" className="text-gray-600 border-gray-300 bg-transparent">
-              <Filter className="h-4 w-4 mr-1" />
+            <Button variant="ghost" size="sm" className="gap-2 hover:text-[#00BDA5]" style={{ color: '#00BDA5' }}>
+              <Filter className="w-4 h-4" />
               Advanced filters
             </Button>
           </div>
@@ -330,14 +336,24 @@ export function ContactsPage() {
                       alt={contact.name}
                       className="w-8 h-8 rounded-full"
                     />
-                    <span className="text-[#00BDA5] hover:underline cursor-pointer font-medium">{contact.name}</span>
+                    <span 
+                      className="text-[#00BDA5] hover:underline cursor-pointer font-medium"
+                      onClick={() => handleContactClick(contact)}
+                    >
+                      {contact.name}
+                    </span>
                   </div>
                 </TableCell>
                 <TableCell>
                   <span className="text-gray-900">{contact.phone}</span>
                 </TableCell>
                 <TableCell>
-                  <span className="text-[#00BDA5] hover:underline cursor-pointer">{contact.email}</span>
+                  <span 
+                    className="text-[#00BDA5] hover:underline cursor-pointer"
+                    onClick={() => handleContactClick(contact)}
+                  >
+                    {contact.email}
+                  </span>
                 </TableCell>
                 <TableCell>
                   <span className="text-gray-900">{contact.leadStatus}</span>
@@ -396,6 +412,13 @@ export function ContactsPage() {
 
       {/* Create Contact Modal */}
       <CreateContactModal open={showCreateModal} onOpenChange={setShowCreateModal} />
+      
+      {/* Update Contact Modal */}
+      <UpdateContactModal 
+        open={showUpdateModal} 
+        onOpenChange={setShowUpdateModal} 
+        contact={selectedContact}
+      />
     </div>
   )
 }

@@ -46,6 +46,7 @@ export function InboxPage() {
   const { conversations, selectedConversationId } = useAppSelector((state) => state.conversations)
   const [replyMessage, setReplyMessage] = useState("")
   const [activeTab, setActiveTab] = useState<"open" | "closed">("open")
+  const [showContactDetails, setShowContactDetails] = useState(false)
 
   const selectedConversation = conversations.find(conv => conv.id === selectedConversationId)
   
@@ -87,7 +88,7 @@ export function InboxPage() {
   }
 
   return (
-    <div className="flex h-full bg-white" style={{ fontFamily: '"Lexend Deca",Helvetica,Arial,sans-serif' }}>
+    <div className="flex h-full bg-white overflow-hidden" style={{ fontFamily: '"Lexend Deca",Helvetica,Arial,sans-serif' }}>
       <style jsx>{`
         * {
           font-family: "Lexend Deca", Helvetica, Arial, sans-serif;
@@ -100,7 +101,7 @@ export function InboxPage() {
       `}</style>
 
       {/* Left Sidebar - Navigation */}
-      <div className="w-60 border-r border-gray-200 flex flex-col bg-white">
+      <div className="hidden md:flex w-52 lg:w-60 min-w-[200px] border-r border-gray-200 flex-col bg-white">
         {/* Header */}
         <div className="px-4 py-3 border-b border-gray-200">
           <div className="flex items-center justify-between">
@@ -223,7 +224,7 @@ export function InboxPage() {
       </div>
 
       {/* Middle Column - Email List */}
-      <div className="w-96 border-r border-gray-200 flex flex-col bg-gray-50">
+      <div className="w-full sm:w-80 lg:w-72 xl:w-96 sm:min-w-[280px] border-r border-gray-200 flex flex-col bg-gray-50">
         {/* Header */}
         <div className="px-4 py-3 border-b border-gray-200 bg-white">
           <div className="flex items-center justify-between">
@@ -327,7 +328,18 @@ export function InboxPage() {
                     </>
                   )}
               </div>
-              <div className="">
+              <div className="flex items-center gap-2">
+                  {/* Contact Details Toggle - Only visible on smaller screens */}
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="xl:hidden"
+                    onClick={() => setShowContactDetails(!showContactDetails)}
+                  >
+                    <User className="w-4 h-4" />
+                    {showContactDetails ? "Hide" : "Contact"}
+                  </Button>
+                  
                   <Button variant="outline" size="sm" onClick={handleCloseConversation}>
                     <CheckCheck className="w-4 h-4" />
                     Close conversation
@@ -342,8 +354,8 @@ export function InboxPage() {
             </div>
           </div>
           
-          <div className="flex">
-            <div className="flex flex-col grow">
+          <div className="flex relative">
+            <div className={`flex flex-col ${showContactDetails ? 'hidden xl:block xl:flex-grow' : 'grow'}`}>
   {/* Owner Section */}
               <div className="px-6 py-3 bg-gray-50 border-b border-gray-200 ">
                 <div className="flex items-center justify-between">
@@ -533,7 +545,7 @@ export function InboxPage() {
               </div>
             </div>
 
-            <div className="border-l border-gray-200 bg-gray-50 min-w-[400px] ">
+            <div className={`${showContactDetails ? 'block w-full' : 'hidden'} xl:block xl:w-80 xl:min-w-[300px] border-l border-gray-200 bg-gray-50`}>
                 <div className="p-4">
                 <div className="flex items-center justify-between mb-4 ">
                   <div className="flex items-center gap-2">

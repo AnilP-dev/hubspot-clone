@@ -40,11 +40,24 @@ export function DealDetailModal({ deal, open, onOpenChange }: DealDetailModalPro
 
   if (!deal) return null
 
-  const formatCurrency = (amount: number) => {
+  const formatCurrency = (amount: string | number) => {
+    // If amount is already a formatted string with currency symbol, return as is
+    if (typeof amount === "string" && amount.includes("$")) {
+      return amount
+    }
+    
+    // If it's a string without currency symbol, parse it as number
+    const numericAmount = typeof amount === "string" ? parseFloat(amount.replace(/[^0-9.-]+/g, "")) : amount
+    
+    // If parsing failed, return the original string or a default
+    if (isNaN(numericAmount)) {
+      return typeof amount === "string" ? amount : "$0"
+    }
+    
     return new Intl.NumberFormat("en-US", {
       style: "currency",
       currency: "USD",
-    }).format(amount)
+    }).format(numericAmount)
   }
 
   const getStageColor = (stage: string) => {
@@ -71,7 +84,7 @@ export function DealDetailModal({ deal, open, onOpenChange }: DealDetailModalPro
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[95vw] w-full h-[95vh] p-0 gap-0">
+      <DialogContent className="max-w-[95vw] w-full h-[95vh] p-0 gap-0 deal-detail-modal">
         <div className="flex h-full">
           {/* Left Sidebar */}
           <div className="w-80 bg-white border-r border-gray-200 flex flex-col">
@@ -110,7 +123,7 @@ export function DealDetailModal({ deal, open, onOpenChange }: DealDetailModalPro
               </div>
 
               {/* Action Buttons */}
-              <div className="flex items-center gap-2 mt-4">
+              <div className="flex flex-wrap items-center gap-2 mt-4">
                 <Button variant="outline" size="sm">
                   <Edit className="h-4 w-4 mr-1" />
                   Note
@@ -187,7 +200,7 @@ export function DealDetailModal({ deal, open, onOpenChange }: DealDetailModalPro
           </div>
 
           {/* Main Content */}
-          <div className="flex-1 flex flex-col">
+          <div className="flex-1 flex flex-col bg-white">
             {/* Tabs */}
             <div className="border-b border-gray-200">
               <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -209,7 +222,7 @@ export function DealDetailModal({ deal, open, onOpenChange }: DealDetailModalPro
             </div>
 
             {/* Content */}
-            <div className="flex-1 overflow-y-auto p-6">
+            <div className="flex-1 overflow-y-auto p-6 bg-white">
               <Tabs value={activeTab} className="w-full">
                 <TabsContent value="overview" className="mt-0 space-y-6">
                   {/* Contacts Section */}

@@ -20,9 +20,11 @@ import {
   Trash2,
 } from "lucide-react"
 import { useAppSelector, useAppDispatch } from "@/lib/store/hooks"
-import { deleteDeal, deleteDeals } from "@/lib/store/slices/dealsSlice"
+import { deleteDeal, deleteDeals, type Deal } from "@/lib/store/slices/dealsSlice"
 import { CreateDealModal } from "./create-deal-modal"
 import { DealDetailModal } from "./deal-detail-modal"
+import { UpdateDealModal } from "./update-deal-modal"
+import { CrmNavigationDropdown } from "./crm-navigation-dropdown"
 import { toast } from "sonner"
 
 export function DealsPage() {
@@ -33,6 +35,8 @@ export function DealsPage() {
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [selectedDeal, setSelectedDeal] = useState(null)
   const [showDetailModal, setShowDetailModal] = useState(false)
+  const [showUpdateModal, setShowUpdateModal] = useState(false)
+  const [dealToUpdate, setDealToUpdate] = useState<Deal | null>(null)
   const [viewMode, setViewMode] = useState<"list" | "grid">("list")
 
   const filteredDeals = deals.filter(
@@ -74,6 +78,11 @@ export function DealsPage() {
   const handleDealClick = (deal: any) => {
     setSelectedDeal(deal)
     setShowDetailModal(true)
+  }
+
+  const handleDealUpdateClick = (deal: Deal) => {
+    setDealToUpdate(deal)
+    setShowUpdateModal(true)
   }
 
   const handleExportDeals = () => {
@@ -120,11 +129,24 @@ export function DealsPage() {
     }
   }
 
-  const formatCurrency = (amount: number) => {
+  const formatCurrency = (amount: string | number) => {
+    // If amount is already a formatted string with currency symbol, return as is
+    if (typeof amount === "string" && amount.includes("$")) {
+      return amount
+    }
+    
+    // If it's a string without currency symbol, parse it as number
+    const numericAmount = typeof amount === "string" ? parseFloat(amount.replace(/[^0-9.-]+/g, "")) : amount
+    
+    // If parsing failed, return the original string or a default
+    if (isNaN(numericAmount)) {
+      return typeof amount === "string" ? amount : "$0"
+    }
+    
     return new Intl.NumberFormat("en-US", {
       style: "currency",
       currency: "USD",
-    }).format(amount)
+    }).format(numericAmount)
   }
 
   const getStageColor = (stage: string) => {
@@ -146,23 +168,20 @@ export function DealsPage() {
       <div className="mb-6">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="text-2xl font-semibold text-gray-900 flex items-center gap-2">
-              Deals
-              <ChevronDown className="h-5 w-5 text-gray-500" />
-            </h1>
-            <p className="text-sm text-gray-600">
+            <CrmNavigationDropdown currentTitle="Deals" recordCount={deals.length} />
+            <p className="text-sm text-gray-600 mt-1">
               {deals.length} record{deals.length !== 1 ? "s" : ""}
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="outline" className="text-orange-600 border-orange-600 hover:bg-orange-50 bg-transparent">
+            <Button variant="outline" className="h-8 gap-2 text-orange-500 border border-orange-500 hover:text-orange-500 font-light text-xs tracking-normal leading-4 rounded-sm bg-transparent">
               Actions
-              <ChevronDown className="h-4 w-4 ml-1" />
+              <ChevronDown className="h-4 w-4" />
             </Button>
-            <Button variant="outline" className="text-orange-600 border-orange-600 hover:bg-orange-50 bg-transparent">
+            <Button variant="outline" className="h-8 gap-2 text-orange-500 border border-orange-500 hover:text-orange-500 font-light text-xs tracking-normal leading-4 rounded-sm bg-transparent">
               Import
             </Button>
-            <Button onClick={() => setShowCreateModal(true)} className="bg-orange-600 hover:bg-orange-700 text-white">
+            <Button onClick={() => setShowCreateModal(true)} className="bg-orange-500 hover:bg-orange-700 text-white rounded-sm h-8">
               Create deal
             </Button>
           </div>
@@ -235,13 +254,13 @@ export function DealsPage() {
               </SelectContent>
             </Select>
 
-            <Button variant="outline" className="text-[#00BDA5] border-[#00BDA5] hover:bg-[#00BDA5]/5 bg-transparent">
-              <Plus className="h-4 w-4 mr-1" />
+            <Button variant="ghost" size="sm" className="gap-2 hover:text-[#00BDA5]" style={{ color: '#00BDA5' }}>
+              <Plus className="w-4 h-4" />
               More
             </Button>
 
-            <Button variant="outline" className="text-gray-600 border-gray-300 bg-transparent">
-              <Filter className="h-4 w-4 mr-1" />
+            <Button variant="ghost" size="sm" className="gap-2 hover:text-[#00BDA5]" style={{ color: '#00BDA5' }}>
+              <Filter className="w-4 h-4" />
               Advanced filters
             </Button>
           </div>
@@ -334,7 +353,7 @@ export function DealsPage() {
                 <TableCell>
                   <span
                     className="text-[#00BDA5] hover:underline cursor-pointer font-medium"
-                    onClick={() => handleDealClick(deal)}
+                    onClick={() => handleDealUpdateClick(deal)}
                   >
                     {deal.name}
                   </span>
@@ -405,6 +424,13 @@ export function DealsPage() {
 
       {/* Deal Detail Modal */}
       <DealDetailModal deal={selectedDeal} open={showDetailModal} onOpenChange={setShowDetailModal} />
+      
+      {/* Update Deal Modal */}
+      <UpdateDealModal 
+        open={showUpdateModal} 
+        onOpenChange={setShowUpdateModal} 
+        deal={dealToUpdate}
+      />
     </div>
   )
 }

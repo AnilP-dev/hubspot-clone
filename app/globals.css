@@ -92,7 +92,7 @@
 
 /* HubSpot Custom Styles */
 .hubspot-sidebar {
-  background-color: var(--hubspot-sidebar-bg);
+  background-color: #33475b;
   width: 56px;
   min-width: 56px;
   height: 100vh;
@@ -117,26 +117,21 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  min-height: 64px;
+  min-height: 56px;
 }
 
 .hubspot-logo {
   width: 24px;
   height: 24px;
-  background-color: var(--hubspot-orange);
-  border-radius: 4px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
 }
 
-.hubspot-logo::after {
-  content: "";
-  width: 12px;
-  height: 12px;
-  background-color: white;
-  border-radius: 2px;
+.hubspot-logo svg {
+  width: 20px;
+  height: 20px;
 }
 
 .hubspot-brand-text {
@@ -186,6 +181,37 @@
 .hubspot-nav-item.active {
   background-color: var(--hubspot-sidebar-active);
   color: var(--hubspot-text-hover);
+}
+
+.hubspot-nav-item.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+  position: relative;
+}
+
+.hubspot-nav-item.disabled:hover {
+  background-color: transparent;
+  color: var(--hubspot-text-muted);
+}
+
+.hubspot-disabled-badge {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  background-color: rgba(255, 255, 255, 0.1);
+  color: var(--hubspot-text-muted);
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-weight: 500;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.hubspot-sidebar.expanded .hubspot-disabled-badge {
+  opacity: 1;
 }
 
 .hubspot-nav-item.expandable {
@@ -372,8 +398,11 @@
   font-size: 13px !important;
   font-weight: 500 !important;
   padding: 6px 12px !important;
-  height: 28px !important;
-  border-radius: 4px !important;
+  height: 32px !important;
+  border-radius: 6px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 4px !important;
 }
 
 .hubspot-upgrade-btn:hover {
@@ -387,11 +416,11 @@
   font-size: 13px !important;
   font-weight: 500 !important;
   padding: 6px 12px !important;
-  height: 28px !important;
-  border-radius: 4px !important;
+  height: 32px !important;
+  border-radius: 6px !important;
   display: flex !important;
   align-items: center !important;
-  gap: 6px !important;
+  gap: 4px !important;
 }
 
 .hubspot-copilot-btn:hover {
@@ -405,8 +434,8 @@
   font-size: 13px !important;
   font-weight: 400 !important;
   padding: 4px 8px !important;
-  height: 28px !important;
-  border-radius: 4px !important;
+  height: 32px !important;
+  border-radius: 6px !important;
   display: flex !important;
   align-items: center !important;
   gap: 8px !important;
@@ -497,4 +526,20 @@
   display: inline-block;
   box-sizing: border-box;
   opacity: 1;
+}
+
+/* Deal Detail Modal Z-Index Override */
+.deal-detail-modal {
+  z-index: 9999 !important;
+}
+
+/* Radix Dialog Z-Index Override for Deal Modal */
+[data-state="open"][role="dialog"].deal-detail-modal,
+.deal-detail-modal[data-state="open"] {
+  z-index: 9999 !important;
+}
+
+/* Radix Dialog Overlay Z-Index Override */
+[data-radix-dialog-overlay] {
+  z-index: 9998 !important;
 }

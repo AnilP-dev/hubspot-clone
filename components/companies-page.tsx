@@ -19,7 +19,10 @@ import {
   Trash2,
 } from "lucide-react"
 import { useAppSelector, useAppDispatch } from "@/lib/store/hooks"
-import { deleteCompany, deleteCompanies } from "@/lib/store/slices/companiesSlice"
+import { deleteCompany, deleteCompanies, type Company } from "@/lib/store/slices/companiesSlice"
+import { CreateCompanyModal } from "./create-company-modal"
+import { UpdateCompanyModal } from "./update-company-modal"
+import { CrmNavigationDropdown } from "./crm-navigation-dropdown"
 import { toast } from "sonner"
 
 export function CompaniesPage() {
@@ -28,6 +31,9 @@ export function CompaniesPage() {
   const [selectedCompanies, setSelectedCompanies] = useState<string[]>([])
   const [searchTerm, setSearchTerm] = useState("")
   const [viewMode, setViewMode] = useState<"list" | "grid">("list")
+  const [showCreateModal, setShowCreateModal] = useState(false)
+  const [showUpdateModal, setShowUpdateModal] = useState(false)
+  const [selectedCompany, setSelectedCompany] = useState<Company | null>(null)
 
   const filteredCompanies = companies.filter(
     (company) =>
@@ -63,6 +69,11 @@ export function CompaniesPage() {
   const handleDeleteCompany = (companyId: string) => {
     dispatch(deleteCompany(companyId))
     toast.success("Company deleted successfully")
+  }
+
+  const handleCompanyClick = (company: Company) => {
+    setSelectedCompany(company)
+    setShowUpdateModal(true)
   }
 
   const handleExportCompanies = () => {
@@ -126,23 +137,20 @@ export function CompaniesPage() {
       <div className="mb-6">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="text-2xl font-semibold text-gray-900 flex items-center gap-2">
-              Companies
-              <ChevronDown className="h-5 w-5 text-gray-500" />
-            </h1>
-            <p className="text-sm text-gray-600">
+            <CrmNavigationDropdown currentTitle="Companies" recordCount={companies.length} />
+            <p className="text-sm text-gray-600 mt-1">
               {companies.length} record{companies.length !== 1 ? "s" : ""}
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="outline" className="text-orange-600 border-orange-600 hover:bg-orange-50 bg-transparent">
+            <Button variant="outline" className="h-8 gap-2 text-orange-500 border border-orange-500 hover:text-orange-500 font-light text-xs tracking-normal leading-4 rounded-sm bg-transparent">
               Actions
-              <ChevronDown className="h-4 w-4 ml-1" />
+              <ChevronDown className="h-4 w-4" />
             </Button>
-            <Button variant="outline" className="text-orange-600 border-orange-600 hover:bg-orange-50 bg-transparent">
+            <Button variant="outline" className="h-8 gap-2 text-orange-500 border border-orange-500 hover:text-orange-500 font-light text-xs tracking-normal leading-4 rounded-sm bg-transparent">
               Import
             </Button>
-            <Button className="bg-orange-600 hover:bg-orange-700 text-white">Create company</Button>
+            <Button onClick={() => setShowCreateModal(true)} className="bg-orange-500 hover:bg-orange-700 text-white rounded-sm h-8">Create company</Button>
           </div>
         </div>
 
@@ -213,13 +221,13 @@ export function CompaniesPage() {
               </SelectContent>
             </Select>
 
-            <Button variant="outline" className="text-[#00BDA5] border-[#00BDA5] hover:bg-[#00BDA5]/5 bg-transparent">
-              <Plus className="h-4 w-4 mr-1" />
+            <Button variant="ghost" size="sm" className="gap-2 hover:text-[#00BDA5]" style={{ color: '#00BDA5' }}>
+              <Plus className="w-4 h-4" />
               More
             </Button>
 
-            <Button variant="outline" className="text-gray-600 border-gray-300 bg-transparent">
-              <Filter className="h-4 w-4 mr-1" />
+            <Button variant="ghost" size="sm" className="gap-2 hover:text-[#00BDA5]" style={{ color: '#00BDA5' }}>
+              <Filter className="w-4 h-4" />
               Advanced filters
             </Button>
           </div>
@@ -314,11 +322,21 @@ export function CompaniesPage() {
                     <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
                       {company.name.charAt(0)}
                     </div>
-                    <span className="text-[#00BDA5] hover:underline cursor-pointer font-medium">{company.name}</span>
+                    <span 
+                      className="text-[#00BDA5] hover:underline cursor-pointer font-medium"
+                      onClick={() => handleCompanyClick(company)}
+                    >
+                      {company.name}
+                    </span>
                   </div>
                 </TableCell>
                 <TableCell>
-                  <span className="text-[#00BDA5] hover:underline cursor-pointer">{company.domain || "--"}</span>
+                  <span 
+                    className="text-[#00BDA5] hover:underline cursor-pointer"
+                    onClick={() => handleCompanyClick(company)}
+                  >
+                    {company.domain || "--"}
+                  </span>
                 </TableCell>
                 <TableCell>
                   <span className="text-gray-900">{company.owner || "Unassigned"}</span>
@@ -377,6 +395,16 @@ export function CompaniesPage() {
           </div>
         </div>
       )}
+      
+      {/* Create Company Modal */}
+      <CreateCompanyModal open={showCreateModal} onOpenChange={setShowCreateModal} />
+      
+      {/* Update Company Modal */}
+      <UpdateCompanyModal 
+        open={showUpdateModal} 
+        onOpenChange={setShowUpdateModal} 
+        company={selectedCompany}
+      />
     </div>
   )
 }

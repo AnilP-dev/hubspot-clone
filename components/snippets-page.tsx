@@ -112,14 +112,14 @@ export function SnippetsPage() {
             <p className="text-sm text-gray-600 mt-1">1 of 5,000 created</p>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" className="text-gray-600 border-gray-300">
-              <FolderPlus className="w-4 h-4 mr-2" />
+            <Button variant="outline" size="sm" className="h-8 gap-2 text-orange-500 border border-orange-500 hover:text-orange-500 font-light text-xs tracking-normal leading-4 rounded-sm bg-transparent">
+              <FolderPlus className="w-4 h-4" />
               New folder
             </Button>
             <Button 
               variant="default" 
               size="sm" 
-              className="bg-orange-500 text-white hover:bg-orange-600"
+              className="bg-orange-500 hover:bg-orange-700 text-white rounded-sm h-8"
               onClick={handleNewSnippet}
             >
               <Plus className="w-4 h-4 mr-2" />

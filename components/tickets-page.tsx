@@ -34,9 +34,11 @@ import {
   applyFilters,
 } from "@/lib/store/slices/ticketsSlice"
 import { CreateTicketModal } from "./create-ticket-modal"
+import { UpdateTicketModal } from "./update-ticket-modal"
+import { CrmNavigationDropdown } from "./crm-navigation-dropdown"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
-import type { FilterType } from "@/lib/types"
+import type { FilterType, Ticket } from "@/lib/types"
 
 const priorityColors = {
   Low: "bg-green-500",
@@ -52,6 +54,8 @@ export function TicketsPage() {
   )
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
+  const [showUpdateModal, setShowUpdateModal] = useState(false)
+  const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null)
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(25)
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false)
@@ -92,6 +96,11 @@ export function TicketsPage() {
 
     dispatch(deleteSelectedTickets())
     toast.success(`${selectedTickets.length} ticket(s) deleted successfully`)
+  }
+
+  const handleTicketClick = (ticket: Ticket) => {
+    setSelectedTicket(ticket)
+    setShowUpdateModal(true)
   }
 
   const handleExport = () => {
@@ -146,10 +155,7 @@ export function TicketsPage() {
       <div className="border-b border-gray-200 p-6">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="text-2xl font-semibold text-teal-600 flex items-center gap-2">
-              Tickets
-              <ChevronDown className="h-5 w-5" />
-            </h1>
+            <CrmNavigationDropdown currentTitle="Tickets" recordCount={filteredTickets.length} />
             <p className="text-sm text-gray-500 mt-1">
               {filteredTickets.length} record{filteredTickets.length !== 1 ? "s" : ""}
             </p>
@@ -159,7 +165,7 @@ export function TicketsPage() {
               <DropdownMenuTrigger asChild>
                 <Button
                   variant="outline"
-                  className="border-orange-500 text-orange-500 hover:bg-orange-50 bg-transparent"
+                  className="h-8 gap-2 text-orange-500 border border-orange-500 hover:text-orange-500 font-light text-xs tracking-normal leading-4 rounded-sm bg-transparent"
                 >
                   Actions <ChevronDown className="ml-2 h-4 w-4" />
                 </Button>
@@ -177,10 +183,10 @@ export function TicketsPage() {
                 )}
               </DropdownMenuContent>
             </DropdownMenu>
-            <Button variant="outline" className="border-orange-500 text-orange-500 hover:bg-orange-50 bg-transparent">
+            <Button variant="outline" className="h-8 gap-2 text-orange-500 border border-orange-500 hover:text-orange-500 font-light text-xs tracking-normal leading-4 rounded-sm bg-transparent">
               Import
             </Button>
-            <Button onClick={() => setIsCreateModalOpen(true)} className="bg-orange-500 hover:bg-orange-600 text-white">
+            <Button onClick={() => setIsCreateModalOpen(true)} className="bg-orange-500 hover:bg-orange-700 text-white rounded-sm h-8">
               Create ticket
             </Button>
           </div>
@@ -345,7 +351,10 @@ export function TicketsPage() {
                   />
                 </TableCell>
                 <TableCell>
-                  <button className="text-teal-600 hover:text-teal-700 hover:underline font-medium">
+                  <button 
+                    className="text-teal-600 hover:text-teal-700 hover:underline font-medium"
+                    onClick={() => handleTicketClick(ticket)}
+                  >
                     {ticket.name}
                   </button>
                 </TableCell>
@@ -421,6 +430,13 @@ export function TicketsPage() {
       )}
 
       <CreateTicketModal isOpen={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)} />
+      
+      {/* Update Ticket Modal */}
+      <UpdateTicketModal 
+        open={showUpdateModal} 
+        onOpenChange={setShowUpdateModal} 
+        ticket={selectedTicket}
+      />
     </div>
   )
 }
