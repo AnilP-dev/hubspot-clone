@@ -498,3 +498,19 @@
   box-sizing: border-box;
   opacity: 1;
 }
+
+/* Deal Detail Modal Z-Index Override */
+.deal-detail-modal {
+  z-index: 9999 !important;
+}
+
+/* Radix Dialog Z-Index Override for Deal Modal */
+[data-state="open"][role="dialog"].deal-detail-modal,
+.deal-detail-modal[data-state="open"] {
+  z-index: 9999 !important;
+}
+
+/* Radix Dialog Overlay Z-Index Override */
+[data-radix-dialog-overlay] {
+  z-index: 9998 !important;
+}

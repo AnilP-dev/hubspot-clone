@@ -159,7 +159,7 @@ export function TicketsPage() {
               <DropdownMenuTrigger asChild>
                 <Button
                   variant="outline"
-                  className="border-orange-500 text-orange-500 hover:bg-orange-50 bg-transparent"
+                  className="h-8 gap-2 text-orange-500 border border-orange-500 hover:text-orange-500 font-light text-xs tracking-normal leading-4 rounded-sm bg-transparent"
                 >
                   Actions <ChevronDown className="ml-2 h-4 w-4" />
                 </Button>
@@ -177,10 +177,10 @@ export function TicketsPage() {
                 )}
               </DropdownMenuContent>
             </DropdownMenu>
-            <Button variant="outline" className="border-orange-500 text-orange-500 hover:bg-orange-50 bg-transparent">
+            <Button variant="outline" className="h-8 gap-2 text-orange-500 border border-orange-500 hover:text-orange-500 font-light text-xs tracking-normal leading-4 rounded-sm bg-transparent">
               Import
             </Button>
-            <Button onClick={() => setIsCreateModalOpen(true)} className="bg-orange-500 hover:bg-orange-600 text-white">
+            <Button onClick={() => setIsCreateModalOpen(true)} className="bg-orange-500 hover:bg-orange-700 text-white rounded-sm h-8">
               Create ticket
             </Button>
           </div>

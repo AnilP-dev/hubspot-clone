@@ -205,10 +205,10 @@ export function CallsPage() {
             <span className="text-sm text-gray-500">{calls.length} records</span>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="outline" className="text-teal border-teal hover:bg-teal/5">
+            <Button variant="outline" className="h-8 gap-2 text-orange-500 border border-orange-500 hover:text-orange-500 font-light text-xs tracking-normal leading-4 rounded-sm bg-transparent">
               Playlists
             </Button>
-            <Button className="bg-orange-500 hover:bg-orange/90 text-white">
+            <Button className="bg-orange-500 hover:bg-orange-700 text-white rounded-sm h-8">
               Record
             </Button>
           </div>
@@ -246,11 +246,11 @@ export function CallsPage() {
           ))}
           
           {/* Add View Button */}
-          <Button variant="ghost" size="sm" className="text-teal hover:bg-teal/5">
+          <Button variant="ghost" size="sm" className="gap-2 hover:text-[#00BDA5]" style={{ color: '#00BDA5' }}>
             + Add view (2/50)
           </Button>
           
-          <Button variant="ghost" size="sm" className="text-teal hover:bg-teal/5">
+          <Button variant="ghost" size="sm" className="gap-2 hover:text-[#00BDA5]" style={{ color: '#00BDA5' }}>
             All views
           </Button>
         </div>
@@ -369,8 +369,8 @@ export function CallsPage() {
               </DropdownMenuContent>
             </DropdownMenu>
 
-            <Button variant="outline" size="sm" className="text-teal border-teal hover:bg-teal/5">
-              <Filter className="w-4 h-4 mr-1" />
+            <Button variant="ghost" size="sm" className="gap-2 hover:text-[#00BDA5]" style={{ color: '#00BDA5' }}>
+              <Filter className="w-4 h-4" />
               Advanced filters
             </Button>
             

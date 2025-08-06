@@ -137,14 +137,14 @@ export function ContactsPage() {
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="outline" className="text-orange-600 border-orange-600 hover:bg-orange-50 bg-transparent">
+            <Button variant="outline" className="h-8 gap-2 text-orange-500 border border-orange-500 hover:text-orange-500 font-light text-xs tracking-normal leading-4 rounded-sm bg-transparent">
               Actions
-              <ChevronDown className="h-4 w-4 ml-1" />
+              <ChevronDown className="h-4 w-4" />
             </Button>
-            <Button variant="outline" className="text-orange-600 border-orange-600 hover:bg-orange-50 bg-transparent">
+            <Button variant="outline" className="h-8 gap-2 text-orange-500 border border-orange-500 hover:text-orange-500 font-light text-xs tracking-normal leading-4 rounded-sm bg-transparent">
               Import
             </Button>
-            <Button onClick={() => setShowCreateModal(true)} className="bg-orange-600 hover:bg-orange-700 text-white">
+            <Button onClick={() => setShowCreateModal(true)} className="bg-orange-500 hover:bg-orange-700 text-white rounded-sm h-8">
               Create contact
             </Button>
           </div>
@@ -227,13 +227,13 @@ export function ContactsPage() {
               </SelectContent>
             </Select>
 
-            <Button variant="outline" className="text-[#00BDA5] border-[#00BDA5] hover:bg-[#00BDA5]/5 bg-transparent">
-              <Plus className="h-4 w-4 mr-1" />
+            <Button variant="ghost" size="sm" className="gap-2 hover:text-[#00BDA5]" style={{ color: '#00BDA5' }}>
+              <Plus className="w-4 h-4" />
               More
             </Button>
 
-            <Button variant="outline" className="text-gray-600 border-gray-300 bg-transparent">
-              <Filter className="h-4 w-4 mr-1" />
+            <Button variant="ghost" size="sm" className="gap-2 hover:text-[#00BDA5]" style={{ color: '#00BDA5' }}>
+              <Filter className="w-4 h-4" />
               Advanced filters
             </Button>
           </div>
