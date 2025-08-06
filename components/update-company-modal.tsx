@@ -333,4 +333,4 @@ export function UpdateCompanyModal({ open, onOpenChange, company }: UpdateCompan
       </DialogContent>
     </Dialog>
   )
-} 
+}

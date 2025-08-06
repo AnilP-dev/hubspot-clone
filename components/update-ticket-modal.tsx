@@ -327,4 +327,4 @@ export function UpdateTicketModal({ open, onOpenChange, ticket }: UpdateTicketMo
       </DialogContent>
     </Dialog>
   )
-} 
+}

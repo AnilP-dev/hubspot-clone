@@ -323,4 +323,4 @@ export function UpdateDealModal({ open, onOpenChange, deal }: UpdateDealModalPro
       </DialogContent>
     </Dialog>
   )
-} 
+}

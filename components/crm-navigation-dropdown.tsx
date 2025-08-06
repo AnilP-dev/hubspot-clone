@@ -144,4 +144,4 @@ export function CrmNavigationDropdown({ currentTitle, recordCount }: CrmNavigati
       </DropdownMenuContent>
     </DropdownMenu>
   )
-} 
+}

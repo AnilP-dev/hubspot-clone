@@ -313,4 +313,4 @@ export function UpdateContactModal({ open, onOpenChange, contact }: UpdateContac
       </DialogContent>
     </Dialog>
   )
-} 
+}
