@@ -20,9 +20,10 @@ import {
   Trash2,
 } from "lucide-react"
 import { useAppSelector, useAppDispatch } from "@/lib/store/hooks"
-import { deleteDeal, deleteDeals } from "@/lib/store/slices/dealsSlice"
+import { deleteDeal, deleteDeals, type Deal } from "@/lib/store/slices/dealsSlice"
 import { CreateDealModal } from "./create-deal-modal"
 import { DealDetailModal } from "./deal-detail-modal"
+import { UpdateDealModal } from "./update-deal-modal"
 import { CrmNavigationDropdown } from "./crm-navigation-dropdown"
 import { toast } from "sonner"
 
@@ -34,6 +35,8 @@ export function DealsPage() {
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [selectedDeal, setSelectedDeal] = useState(null)
   const [showDetailModal, setShowDetailModal] = useState(false)
+  const [showUpdateModal, setShowUpdateModal] = useState(false)
+  const [dealToUpdate, setDealToUpdate] = useState<Deal | null>(null)
   const [viewMode, setViewMode] = useState<"list" | "grid">("list")
 
   const filteredDeals = deals.filter(
@@ -75,6 +78,11 @@ export function DealsPage() {
   const handleDealClick = (deal: any) => {
     setSelectedDeal(deal)
     setShowDetailModal(true)
+  }
+
+  const handleDealUpdateClick = (deal: Deal) => {
+    setDealToUpdate(deal)
+    setShowUpdateModal(true)
   }
 
   const handleExportDeals = () => {
@@ -345,7 +353,7 @@ export function DealsPage() {
                 <TableCell>
                   <span
                     className="text-[#00BDA5] hover:underline cursor-pointer font-medium"
-                    onClick={() => handleDealClick(deal)}
+                    onClick={() => handleDealUpdateClick(deal)}
                   >
                     {deal.name}
                   </span>
@@ -416,6 +424,13 @@ export function DealsPage() {
 
       {/* Deal Detail Modal */}
       <DealDetailModal deal={selectedDeal} open={showDetailModal} onOpenChange={setShowDetailModal} />
+      
+      {/* Update Deal Modal */}
+      <UpdateDealModal 
+        open={showUpdateModal} 
+        onOpenChange={setShowUpdateModal} 
+        deal={dealToUpdate}
+      />
     </div>
   )
 }

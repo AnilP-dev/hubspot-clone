@@ -19,8 +19,9 @@ import {
   Trash2,
 } from "lucide-react"
 import { useAppSelector, useAppDispatch } from "@/lib/store/hooks"
-import { deleteCompany, deleteCompanies } from "@/lib/store/slices/companiesSlice"
+import { deleteCompany, deleteCompanies, type Company } from "@/lib/store/slices/companiesSlice"
 import { CreateCompanyModal } from "./create-company-modal"
+import { UpdateCompanyModal } from "./update-company-modal"
 import { CrmNavigationDropdown } from "./crm-navigation-dropdown"
 import { toast } from "sonner"
 
@@ -31,6 +32,8 @@ export function CompaniesPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [viewMode, setViewMode] = useState<"list" | "grid">("list")
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const [showUpdateModal, setShowUpdateModal] = useState(false)
+  const [selectedCompany, setSelectedCompany] = useState<Company | null>(null)
 
   const filteredCompanies = companies.filter(
     (company) =>
@@ -66,6 +69,11 @@ export function CompaniesPage() {
   const handleDeleteCompany = (companyId: string) => {
     dispatch(deleteCompany(companyId))
     toast.success("Company deleted successfully")
+  }
+
+  const handleCompanyClick = (company: Company) => {
+    setSelectedCompany(company)
+    setShowUpdateModal(true)
   }
 
   const handleExportCompanies = () => {
@@ -314,11 +322,21 @@ export function CompaniesPage() {
                     <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
                       {company.name.charAt(0)}
                     </div>
-                    <span className="text-[#00BDA5] hover:underline cursor-pointer font-medium">{company.name}</span>
+                    <span 
+                      className="text-[#00BDA5] hover:underline cursor-pointer font-medium"
+                      onClick={() => handleCompanyClick(company)}
+                    >
+                      {company.name}
+                    </span>
                   </div>
                 </TableCell>
                 <TableCell>
-                  <span className="text-[#00BDA5] hover:underline cursor-pointer">{company.domain || "--"}</span>
+                  <span 
+                    className="text-[#00BDA5] hover:underline cursor-pointer"
+                    onClick={() => handleCompanyClick(company)}
+                  >
+                    {company.domain || "--"}
+                  </span>
                 </TableCell>
                 <TableCell>
                   <span className="text-gray-900">{company.owner || "Unassigned"}</span>
@@ -380,6 +398,13 @@ export function CompaniesPage() {
       
       {/* Create Company Modal */}
       <CreateCompanyModal open={showCreateModal} onOpenChange={setShowCreateModal} />
+      
+      {/* Update Company Modal */}
+      <UpdateCompanyModal 
+        open={showUpdateModal} 
+        onOpenChange={setShowUpdateModal} 
+        company={selectedCompany}
+      />
     </div>
   )
 }
