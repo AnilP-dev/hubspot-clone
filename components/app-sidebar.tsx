@@ -39,6 +39,14 @@ import {
   MessageSquare,
   Code,
   Bookmark,
+  Megaphone,
+  Share2,
+  Calendar,
+  MousePointer,
+  Smartphone,
+  UserCheck,
+  Trophy,
+  Route,
 } from "lucide-react"
 
 const navigationItems = [
@@ -60,7 +68,24 @@ const navigationItems = [
       { title: "Snippets", href: "/crm/snippets", icon: Code },
     ],
   },
-  { title: "Marketing", icon: TrendingUp, href: "/marketing" },
+  {
+    title: "Marketing",
+    icon: TrendingUp,
+    isExpandable: true,
+    items: [
+      { title: "Campaigns", href: "/marketing/campaigns", icon: Megaphone },
+      { title: "Email", href: "/marketing/email", icon: Mail },
+      { title: "Social", href: "/marketing/social", icon: Share2 },
+      { title: "Ads", href: "/marketing/ads", icon: Target },
+      { title: "Events", href: "/marketing/events", icon: Calendar },
+      { title: "Forms", href: "/marketing/forms", icon: Calendar },
+      { title: "CTAs", href: "/marketing/ctas", icon: MousePointer },
+      { title: "SMS", href: "/marketing/sms", icon: Smartphone, hasNotification: true },
+      { title: "Buyer Intent", href: "/marketing/buyer-intent", icon: UserCheck },
+      { title: "Lead Scoring", href: "/marketing/lead-scoring", icon: Trophy },
+      { title: "Journeys", href: "/marketing/journeys", icon: Route, badge: "BETA" },
+    ],
+  },
   { title: "Content", icon: FileText, href: "/content" },
   { title: "Sales", icon: DollarSign, href: "/sales" },
   { title: "Commerce", icon: ShoppingCart, href: "/commerce" },
@@ -73,7 +98,14 @@ const navigationItems = [
 
 export function AppSidebar() {
   const pathname = usePathname()
-  const [expandedItems, setExpandedItems] = useState<string[]>(["CRM"])
+  const getInitialExpanded = () => {
+    const expanded = ["CRM"]
+    if (pathname.startsWith("/marketing")) {
+      expanded.push("Marketing")
+    }
+    return expanded
+  }
+  const [expandedItems, setExpandedItems] = useState<string[]>(getInitialExpanded())
 
   const toggleExpanded = (title: string) => {
     setExpandedItems((prev) => (prev.includes(title) ? prev.filter((item) => item !== title) : [...prev, title]))
@@ -129,7 +161,7 @@ export function AppSidebar() {
                       <SidebarMenuButton
                         tooltip={item.title}
                         className={`text-gray-300 hover:text-white hover:bg-gray-600/50 w-full justify-between px-3 py-2 rounded-md transition-colors ${
-                          pathname.startsWith("/crm") ? "bg-gray-600/70 text-white" : ""
+                          pathname.startsWith(`/${item.title.toLowerCase()}`) ? "bg-gray-600/70 text-white" : ""
                         }`}
                       >
                         <div className="flex items-center gap-3">
@@ -153,9 +185,21 @@ export function AppSidebar() {
                                 pathname === subItem.href ? "bg-gray-600/70 text-white" : ""
                               }`}
                             >
-                              <Link href={subItem.href} className="flex items-center gap-3">
-                                <subItem.icon className="w-4 h-4 flex-shrink-0" />
-                                <span>{subItem.title}</span>
+                              <Link href={subItem.href} className="flex items-center gap-3 w-full justify-between">
+                                <div className="flex items-center gap-3">
+                                  <subItem.icon className="w-4 h-4 flex-shrink-0" />
+                                  <span>{subItem.title}</span>
+                                </div>
+                                <div className="flex items-center gap-1">
+                                  {subItem.hasNotification && (
+                                    <div className="w-2 h-2 bg-orange-500 rounded-full flex-shrink-0"></div>
+                                  )}
+                                  {subItem.badge && (
+                                    <span className="bg-blue-600 text-white text-xs px-1.5 py-0.5 rounded text-[10px] font-medium">
+                                      {subItem.badge}
+                                    </span>
+                                  )}
+                                </div>
                               </Link>
                             </SidebarMenuSubButton>
                           </SidebarMenuSubItem>

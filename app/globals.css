@@ -42,6 +42,13 @@
     --hubspot-teal: #00a4bd;
     --hubspot-red: #e53e3e;
     --hubspot-text-primary : rgb(51, 71, 91);
+    
+    /* HubSpot Brand Colors */
+    --hubspot-link-color: rgb(0, 145, 174);
+    --hubspot-alert-bg: rgb(229, 245, 248);
+    --hubspot-alert-border: rgb(0, 164, 189);
+    --hubspot-selected-border: rgb(0, 145, 174);
+    --hubspot-selected-bg: rgb(229, 245, 248);
   }
 
   .dark {
@@ -118,6 +125,7 @@
   align-items: center;
   gap: 12px;
   min-height: 56px;
+  background-color: #33475b;
 }
 
 .hubspot-logo {
@@ -140,10 +148,30 @@
   font-weight: 600;
   opacity: 0;
   transition: opacity 0.2s ease;
+  flex: 1;
 }
 
 .hubspot-sidebar.expanded .hubspot-brand-text {
   opacity: 1;
+}
+
+.hubspot-hamburger-btn {
+  background: transparent;
+  border: none;
+  color: var(--hubspot-text-secondary);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: auto;
+}
+
+.hubspot-hamburger-btn:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: var(--hubspot-text-hover);
 }
 
 .hubspot-sidebar-content {
@@ -214,6 +242,15 @@
   opacity: 1;
 }
 
+.hubspot-beta-badge {
+  background-color: #3b82f6;
+  color: white;
+  font-size: 10px;
+  font-weight: 500;
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+
 .hubspot-nav-item.expandable {
   justify-content: space-between;
 }
@@ -269,6 +306,7 @@
 .hubspot-submenu-item {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   width: 100%;
   padding: 10px 16px 10px 52px;
   color: var(--hubspot-text-muted);
@@ -364,16 +402,17 @@
   transform: translateX(-50%);
   width: 32px;
   height: 32px;
-  background-color: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background-color: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--hubspot-text-secondary);
+  color: var(--hubspot-text-hover);
   cursor: pointer;
   transition: all 0.2s ease;
   opacity: 0;
+  z-index: 10;
 }
 
 .hubspot-sidebar.expanded .hubspot-collapse-button {
@@ -381,8 +420,9 @@
 }
 
 .hubspot-collapse-button:hover {
-  background-color: rgba(255, 255, 255, 0.15);
+  background-color: rgba(255, 255, 255, 0.3);
   color: var(--hubspot-text-hover);
+  border-color: rgba(255, 255, 255, 0.4);
 }
 
 .hubspot-collapse-button svg {
@@ -542,4 +582,37 @@
 /* Radix Dialog Overlay Z-Index Override */
 [data-radix-dialog-overlay] {
   z-index: 9998 !important;
+}
+
+/* HubSpot Brand Utility Classes */
+.hubspot-link {
+  color: var(--hubspot-link-color);
+}
+
+.hubspot-link:hover {
+  color: var(--hubspot-link-color);
+  opacity: 0.8;
+}
+
+.hubspot-alert {
+  background-color: var(--hubspot-alert-bg);
+  border: 1px solid var(--hubspot-alert-border);
+}
+
+.hubspot-alert-text {
+  color: var(--hubspot-link-color);
+}
+
+.hubspot-alert-icon {
+  color: var(--hubspot-alert-border);
+}
+
+.hubspot-selected {
+  border-color: var(--hubspot-selected-border);
+  background-color: var(--hubspot-selected-bg);
+}
+
+/* Gradient header for modals/sidebars with gradient */
+.hubspot-gradient-header {
+  background-image: linear-gradient(86deg, rgb(0, 164, 189) -3.28%, rgb(0, 189, 165) 97.8%);
 }
