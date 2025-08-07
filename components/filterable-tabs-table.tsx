@@ -45,6 +45,7 @@ interface FilterableTabsTableProps {
   onTabReorder?: (fromIndex: number, toIndex: number) => void
   onDataFilter?: (filters: Record<string, any>) => any[]
   onCampaignClick?: (campaignId: string) => void
+  onDelete?: (selectedIds: string[]) => void
   searchPlaceholder?: string
   maxViews?: number
   currentViews?: number
@@ -59,6 +60,7 @@ export function FilterableTabsTable({
   onTabReorder,
   onDataFilter,
   onCampaignClick,
+  onDelete,
   searchPlaceholder = "Search campaigns",
   maxViews = 50,
   currentViews = 3
@@ -181,7 +183,7 @@ export function FilterableTabsTable({
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3 font-bold">
             <Select defaultValue="campaign-owner">
-              <SelectTrigger className="focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 w-40 bg-white font-bold border-gray-300 text-hubspot-secondary border-0">
+              <SelectTrigger className="focus-visible:outline-none focus-visible:!ring-0 focus-visible:!ring-offset-0 w-40 bg-white font-bold border-gray-300 text-hubspot-secondary border-0">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="text-hubspot-primary">
@@ -217,20 +219,54 @@ export function FilterableTabsTable({
 
         {/* Search Bar */}
         <div className="flex justify-between bg-inactive-background border border-hubspot-view-tab-border-color py-2 px-4 pl-2 mr-0 ml-0">
-          <div className="relative w-[20%] h-15 ">
-            <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <Input
-              placeholder={searchPlaceholder}
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="p-0 h-8 pl-2 text-lg bg-white border-gray-300 rounded-none focus-visible:outline-none focus-visible:ring-2 focus-visible:!ring-hubspot-secondary focus-visible:ring-offset-0"
-            />
+          <div className="flex items-center gap-4 w-full">
+            <div className="relative w-[20%] h-15">
+              <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Input
+                placeholder={searchPlaceholder}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="p-0 h-8 pl-2 text-lg bg-white border-gray-300 rounded-none focus-visible:outline-none focus-visible:ring-2 focus-visible:!ring-hubspot-secondary focus-visible:ring-offset-0"
+              />
+            </div>
+            
+            {/* Selection Info and Actions */}
+            {selectedRows.length > 0 && (
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-600">
+                  {selectedRows.length} selected
+                </span>
+                <button className="flex items-center gap-1 px-2 py-1 text-sm text-hubspot-secondary hover:text-teal-700 font-medium">
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                    <path d="m18.5 2.5 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                  </svg>
+                  Edit
+                </button>
+                <button 
+                  onClick={() => {
+                    if (onDelete) {
+                      onDelete(selectedRows)
+                      setSelectedRows([]) // Clear selection after delete
+                    }
+                  }}
+                  className="flex items-center gap-1 px-2 py-1 text-sm text-hubspot-secondary hover:text-red-700 font-medium"
+                >
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <polyline points="3,6 5,6 21,6"/>
+                    <path d="m19,6v14a2,2 0 0 1-2,2H7a2,2 0 0 1-2-2V6m3,0V4a2,2 0 0 1 2-2h4a2,2 0 0 1 2,2v2"/>
+                  </svg>
+                  Delete
+                </button>
+              </div>
+            )}
           </div>
-               {/* Actions Bar */}
-            <Button variant="outline" size="sm" className="h-8 rounded-xs text-gray-600 border-gray-300 text-xs font-light">
-              Actions
-              <ChevronDown className="h-2 w-2 ml-0" />
-            </Button>
+          
+          {/* Actions Bar */}
+          <Button variant="outline" size="sm" className="h-8 rounded-xs text-gray-600 border-gray-300 text-xs font-light">
+            Actions
+            <ChevronDown className="h-2 w-2 ml-0" />
+          </Button>
         </div>
         </div>
 

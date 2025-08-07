@@ -7,7 +7,7 @@ import {
   Share2, 
   Target, 
   Calendar, 
-  FileForm, 
+  FileText, 
   MousePointer, 
   Smartphone, 
   UserCheck, 
@@ -61,7 +61,7 @@ const marketingTools = [
   {
     title: "Forms",
     description: "Create forms to capture leads",
-    icon: FileForm,
+    icon: FileText,
     href: "/marketing/forms",
     color: "bg-teal-500",
     comingSoon: true,

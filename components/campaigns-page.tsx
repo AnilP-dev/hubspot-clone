@@ -1,9 +1,10 @@
 "use client"
 
 import { useState } from "react"
-import { useSelector } from "react-redux"
+import { useSelector, useDispatch } from "react-redux"
 import { useRouter } from "next/navigation"
 import { RootState } from "@/lib/store"
+import { removeCampaigns } from "@/lib/store/slices/campaignsSlice"
 import { Button } from "@/components/ui/button"
 import { ChevronDown, BarChart3 } from "lucide-react"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
@@ -27,6 +28,7 @@ interface Column {
 
 export function CampaignsPage() {
   const campaigns = useSelector((state: RootState) => state.campaigns.campaigns)
+  const dispatch = useDispatch()
   const router = useRouter()
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [isFormSidebarOpen, setIsFormSidebarOpen] = useState(false)
@@ -99,6 +101,17 @@ export function CampaignsPage() {
     router.push(`/marketing/campaigns/${campaignId}`)
   }
 
+  const handleDeleteCampaigns = (selectedIds: string[]) => {
+    if (selectedIds.length > 0) {
+      const confirmed = window.confirm(
+        `Are you sure you want to delete ${selectedIds.length} campaign${selectedIds.length > 1 ? 's' : ''}? This action cannot be undone.`
+      )
+      if (confirmed) {
+        dispatch(removeCampaigns(selectedIds))
+      }
+    }
+  }
+
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
       {/* Header */}
@@ -163,6 +176,7 @@ export function CampaignsPage() {
               onTabAdd={handleTabAdd}
               onTabReorder={handleTabReorder}
               onCampaignClick={handleCampaignClick}
+              onDelete={handleDeleteCampaigns}
               searchPlaceholder="Search campaigns"
               maxViews={50}
               currentViews={tabs.length}
