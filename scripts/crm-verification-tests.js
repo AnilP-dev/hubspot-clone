@@ -469,6 +469,501 @@ export const testContactDeletion = (store, contactId) => {
   return result;
 };
 
+/**
+ * Test Company Creation Workflow
+ * @param {Object} store - Redux store
+ * @param {Object} companyData - Company data to create
+ * @returns {Object} Test result
+ */
+export const testCompanyCreation = (store, companyData) => {
+  const result = {
+    workflowId: 'CRM-COMPANY-001',
+    success: true,
+    errors: [],
+    steps: []
+  };
+
+  try {
+    // Step 1: Get initial state
+    const initialState = store.getState();
+    const initialCount = initialState.companies.companies.length;
+    result.steps.push(`Initial company count: ${initialCount}`);
+
+    // Step 2: Dispatch create action
+    store.dispatch({
+      type: 'companies/addCompany',
+      payload: companyData
+    });
+
+    // Step 3: Verify state after creation
+    const newState = store.getState();
+    const newCount = newState.companies.companies.length;
+    result.steps.push(`New company count: ${newCount}`);
+
+    // Step 4: Verify company was added
+    const verification = verifyCompanyState(newState, companyData);
+    if (!verification.success) {
+      result.success = false;
+      result.errors.push(...verification.errors);
+    }
+
+    // Step 5: Verify count increased
+    const countVerification = verifyListCount(newCount, initialCount + 1);
+    if (!countVerification.success) {
+      result.success = false;
+      result.errors.push(...countVerification.errors);
+    }
+
+    result.steps.push('Company creation workflow completed successfully');
+
+  } catch (error) {
+    result.success = false;
+    result.errors.push(`Workflow failed: ${error.message}`);
+  }
+
+  return result;
+};
+
+/**
+ * Test Company Update Workflow
+ * @param {Object} store - Redux store
+ * @param {string} companyId - Company ID to update
+ * @param {Object} updateData - Data to update
+ * @returns {Object} Test result
+ */
+export const testCompanyUpdate = (store, companyId, updateData) => {
+  const result = {
+    workflowId: 'CRM-COMPANY-002',
+    success: true,
+    errors: [],
+    steps: []
+  };
+
+  try {
+    // Step 1: Get initial state
+    const initialState = store.getState();
+    const initialCompany = initialState.companies.companies.find(c => c.id === companyId);
+    if (!initialCompany) {
+      result.success = false;
+      result.errors.push(`Company with ID ${companyId} not found`);
+      return result;
+    }
+    result.steps.push(`Found company: ${initialCompany.name}`);
+
+    // Step 2: Dispatch update action
+    const updatedCompany = { ...initialCompany, ...updateData, lastActivityDate: "Just now" };
+    store.dispatch({
+      type: 'companies/updateCompany',
+      payload: updatedCompany
+    });
+
+    // Step 3: Verify state after update
+    const newState = store.getState();
+    const verification = verifyCompanyState(newState, updatedCompany);
+    if (!verification.success) {
+      result.success = false;
+      result.errors.push(...verification.errors);
+    }
+
+    result.steps.push('Company update workflow completed successfully');
+
+  } catch (error) {
+    result.success = false;
+    result.errors.push(`Workflow failed: ${error.message}`);
+  }
+
+  return result;
+};
+
+/**
+ * Test Company Deletion Workflow
+ * @param {Object} store - Redux store
+ * @param {string} companyId - Company ID to delete
+ * @returns {Object} Test result
+ */
+export const testCompanyDeletion = (store, companyId) => {
+  const result = {
+    workflowId: 'CRM-COMPANY-003',
+    success: true,
+    errors: [],
+    steps: []
+  };
+
+  try {
+    // Step 1: Get initial state
+    const initialState = store.getState();
+    const initialCount = initialState.companies.companies.length;
+    const initialCompany = initialState.companies.companies.find(c => c.id === companyId);
+    if (!initialCompany) {
+      result.success = false;
+      result.errors.push(`Company with ID ${companyId} not found`);
+      return result;
+    }
+    result.steps.push(`Found company to delete: ${initialCompany.name}`);
+
+    // Step 2: Dispatch delete action
+    store.dispatch({
+      type: 'companies/deleteCompany',
+      payload: companyId
+    });
+
+    // Step 3: Verify state after deletion
+    const newState = store.getState();
+    const newCount = newState.companies.companies.length;
+    const deletedCompany = newState.companies.companies.find(c => c.id === companyId);
+
+    if (deletedCompany) {
+      result.success = false;
+      result.errors.push(`Company with ID ${companyId} still exists after deletion`);
+    }
+
+    // Step 4: Verify count decreased
+    const countVerification = verifyListCount(newCount, initialCount - 1);
+    if (!countVerification.success) {
+      result.success = false;
+      result.errors.push(...countVerification.errors);
+    }
+
+    result.steps.push('Company deletion workflow completed successfully');
+
+  } catch (error) {
+    result.success = false;
+    result.errors.push(`Workflow failed: ${error.message}`);
+  }
+
+  return result;
+};
+
+/**
+ * Test Deal Creation Workflow
+ * @param {Object} store - Redux store
+ * @param {Object} dealData - Deal data to create
+ * @returns {Object} Test result
+ */
+export const testDealCreation = (store, dealData) => {
+  const result = {
+    workflowId: 'CRM-DEAL-001',
+    success: true,
+    errors: [],
+    steps: []
+  };
+
+  try {
+    // Step 1: Get initial state
+    const initialState = store.getState();
+    const initialCount = initialState.deals.deals.length;
+    result.steps.push(`Initial deal count: ${initialCount}`);
+
+    // Step 2: Dispatch create action
+    store.dispatch({
+      type: 'deals/addDeal',
+      payload: dealData
+    });
+
+    // Step 3: Verify state after creation
+    const newState = store.getState();
+    const newCount = newState.deals.deals.length;
+    result.steps.push(`New deal count: ${newCount}`);
+
+    // Step 4: Verify deal was added
+    const verification = verifyDealState(newState, dealData);
+    if (!verification.success) {
+      result.success = false;
+      result.errors.push(...verification.errors);
+    }
+
+    // Step 5: Verify count increased
+    const countVerification = verifyListCount(newCount, initialCount + 1);
+    if (!countVerification.success) {
+      result.success = false;
+      result.errors.push(...countVerification.errors);
+    }
+
+    result.steps.push('Deal creation workflow completed successfully');
+
+  } catch (error) {
+    result.success = false;
+    result.errors.push(`Workflow failed: ${error.message}`);
+  }
+
+  return result;
+};
+
+/**
+ * Test Deal Update Workflow
+ * @param {Object} store - Redux store
+ * @param {string} dealId - Deal ID to update
+ * @param {Object} updateData - Data to update
+ * @returns {Object} Test result
+ */
+export const testDealUpdate = (store, dealId, updateData) => {
+  const result = {
+    workflowId: 'CRM-DEAL-002',
+    success: true,
+    errors: [],
+    steps: []
+  };
+
+  try {
+    // Step 1: Get initial state
+    const initialState = store.getState();
+    const initialDeal = initialState.deals.deals.find(d => d.id === dealId);
+    if (!initialDeal) {
+      result.success = false;
+      result.errors.push(`Deal with ID ${dealId} not found`);
+      return result;
+    }
+    result.steps.push(`Found deal: ${initialDeal.name}`);
+
+    // Step 2: Dispatch update action
+    const updatedDeal = { ...initialDeal, ...updateData, lastActivityDate: "Just now" };
+    store.dispatch({
+      type: 'deals/updateDeal',
+      payload: updatedDeal
+    });
+
+    // Step 3: Verify state after update
+    const newState = store.getState();
+    const verification = verifyDealState(newState, updatedDeal);
+    if (!verification.success) {
+      result.success = false;
+      result.errors.push(...verification.errors);
+    }
+
+    result.steps.push('Deal update workflow completed successfully');
+
+  } catch (error) {
+    result.success = false;
+    result.errors.push(`Workflow failed: ${error.message}`);
+  }
+
+  return result;
+};
+
+/**
+ * Test Deal Deletion Workflow
+ * @param {Object} store - Redux store
+ * @param {string} dealId - Deal ID to delete
+ * @returns {Object} Test result
+ */
+export const testDealDeletion = (store, dealId) => {
+  const result = {
+    workflowId: 'CRM-DEAL-003',
+    success: true,
+    errors: [],
+    steps: []
+  };
+
+  try {
+    // Step 1: Get initial state
+    const initialState = store.getState();
+    const initialCount = initialState.deals.deals.length;
+    const initialDeal = initialState.deals.deals.find(d => d.id === dealId);
+    if (!initialDeal) {
+      result.success = false;
+      result.errors.push(`Deal with ID ${dealId} not found`);
+      return result;
+    }
+    result.steps.push(`Found deal to delete: ${initialDeal.name}`);
+
+    // Step 2: Dispatch delete action
+    store.dispatch({
+      type: 'deals/deleteDeal',
+      payload: dealId
+    });
+
+    // Step 3: Verify state after deletion
+    const newState = store.getState();
+    const newCount = newState.deals.deals.length;
+    const deletedDeal = newState.deals.deals.find(d => d.id === dealId);
+
+    if (deletedDeal) {
+      result.success = false;
+      result.errors.push(`Deal with ID ${dealId} still exists after deletion`);
+    }
+
+    // Step 4: Verify count decreased
+    const countVerification = verifyListCount(newCount, initialCount - 1);
+    if (!countVerification.success) {
+      result.success = false;
+      result.errors.push(...countVerification.errors);
+    }
+
+    result.steps.push('Deal deletion workflow completed successfully');
+
+  } catch (error) {
+    result.success = false;
+    result.errors.push(`Workflow failed: ${error.message}`);
+  }
+
+  return result;
+};
+
+/**
+ * Test Ticket Creation Workflow
+ * @param {Object} store - Redux store
+ * @param {Object} ticketData - Ticket data to create
+ * @returns {Object} Test result
+ */
+export const testTicketCreation = (store, ticketData) => {
+  const result = {
+    workflowId: 'CRM-TICKET-001',
+    success: true,
+    errors: [],
+    steps: []
+  };
+
+  try {
+    // Step 1: Get initial state
+    const initialState = store.getState();
+    const initialCount = initialState.tickets.tickets.length;
+    result.steps.push(`Initial ticket count: ${initialCount}`);
+
+    // Step 2: Dispatch create action
+    store.dispatch({
+      type: 'tickets/addTicket',
+      payload: ticketData
+    });
+
+    // Step 3: Verify state after creation
+    const newState = store.getState();
+    const newCount = newState.tickets.tickets.length;
+    result.steps.push(`New ticket count: ${newCount}`);
+
+    // Step 4: Verify ticket was added
+    const verification = verifyTicketState(newState, ticketData);
+    if (!verification.success) {
+      result.success = false;
+      result.errors.push(...verification.errors);
+    }
+
+    // Step 5: Verify count increased
+    const countVerification = verifyListCount(newCount, initialCount + 1);
+    if (!countVerification.success) {
+      result.success = false;
+      result.errors.push(...countVerification.errors);
+    }
+
+    result.steps.push('Ticket creation workflow completed successfully');
+
+  } catch (error) {
+    result.success = false;
+    result.errors.push(`Workflow failed: ${error.message}`);
+  }
+
+  return result;
+};
+
+/**
+ * Test Ticket Update Workflow
+ * @param {Object} store - Redux store
+ * @param {string} ticketId - Ticket ID to update
+ * @param {Object} updateData - Data to update
+ * @returns {Object} Test result
+ */
+export const testTicketUpdate = (store, ticketId, updateData) => {
+  const result = {
+    workflowId: 'CRM-TICKET-002',
+    success: true,
+    errors: [],
+    steps: []
+  };
+
+  try {
+    // Step 1: Get initial state
+    const initialState = store.getState();
+    const initialTicket = initialState.tickets.tickets.find(t => t.id === ticketId);
+    if (!initialTicket) {
+      result.success = false;
+      result.errors.push(`Ticket with ID ${ticketId} not found`);
+      return result;
+    }
+    result.steps.push(`Found ticket: ${initialTicket.name}`);
+
+    // Step 2: Dispatch update action
+    const updatedTicket = { ...initialTicket, ...updateData, lastActivityDate: "Just now" };
+    store.dispatch({
+      type: 'tickets/updateTicket',
+      payload: updatedTicket
+    });
+
+    // Step 3: Verify state after update
+    const newState = store.getState();
+    const verification = verifyTicketState(newState, updatedTicket);
+    if (!verification.success) {
+      result.success = false;
+      result.errors.push(...verification.errors);
+    }
+
+    result.steps.push('Ticket update workflow completed successfully');
+
+  } catch (error) {
+    result.success = false;
+    result.errors.push(`Workflow failed: ${error.message}`);
+  }
+
+  return result;
+};
+
+/**
+ * Test Ticket Deletion Workflow
+ * @param {Object} store - Redux store
+ * @param {string} ticketId - Ticket ID to delete
+ * @returns {Object} Test result
+ */
+export const testTicketDeletion = (store, ticketId) => {
+  const result = {
+    workflowId: 'CRM-TICKET-003',
+    success: true,
+    errors: [],
+    steps: []
+  };
+
+  try {
+    // Step 1: Get initial state
+    const initialState = store.getState();
+    const initialCount = initialState.tickets.tickets.length;
+    const initialTicket = initialState.tickets.tickets.find(t => t.id === ticketId);
+    if (!initialTicket) {
+      result.success = false;
+      result.errors.push(`Ticket with ID ${ticketId} not found`);
+      return result;
+    }
+    result.steps.push(`Found ticket to delete: ${initialTicket.name}`);
+
+    // Step 2: Dispatch delete action
+    store.dispatch({
+      type: 'tickets/deleteTicket',
+      payload: ticketId
+    });
+
+    // Step 3: Verify state after deletion
+    const newState = store.getState();
+    const newCount = newState.tickets.tickets.length;
+    const deletedTicket = newState.tickets.tickets.find(t => t.id === ticketId);
+
+    if (deletedTicket) {
+      result.success = false;
+      result.errors.push(`Ticket with ID ${ticketId} still exists after deletion`);
+    }
+
+    // Step 4: Verify count decreased
+    const countVerification = verifyListCount(newCount, initialCount - 1);
+    if (!countVerification.success) {
+      result.success = false;
+      result.errors.push(...countVerification.errors);
+    }
+
+    result.steps.push('Ticket deletion workflow completed successfully');
+
+  } catch (error) {
+    result.success = false;
+    result.errors.push(`Workflow failed: ${error.message}`);
+  }
+
+  return result;
+};
+
 // ============================================================================
 // UTILITY FUNCTIONS
 // ============================================================================
