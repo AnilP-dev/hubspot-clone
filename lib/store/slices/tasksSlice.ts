@@ -7,9 +7,11 @@ export interface Task {
   status: "Not started" | "In progress" | "Completed" | "Waiting on contact" | "Deferred"
   associatedContact?: string
   associatedCompany?: string
+  associatedCampaign?: string
   lastContacted?: string
   lastEngagement?: string
   dueDate: string
+  dueTime?: string
   priority: "High" | "Medium" | "Low" | "None"
   assignedTo: string
   queue?: string
