@@ -60,6 +60,34 @@ export function CampaignCreationFormSidebar({ isOpen, onClose, onBack }: Campaig
       spend: 0,
       notes: formData.campaignNotes || "",
       assets: [],
+      budgetItems: [],
+      spendItems: [],
+      activities: [
+        {
+          id: `activity-${Date.now()}-1`,
+          campaignId: campaignId,
+          userId: "system",
+          userName: "HubSpot",
+          action: "updated" as const,
+          entityType: "campaign" as const,
+          entityName: "Campaign budget total",
+          description: "updated this campaign",
+          timestamp: new Date().toISOString(),
+          details: { "Campaign budget total": "$25" }
+        },
+        {
+          id: `activity-${Date.now()}-2`,
+          campaignId: campaignId,
+          userId: "system",
+          userName: "HubSpot", 
+          action: "updated" as const,
+          entityType: "campaign" as const,
+          entityName: "Campaign spend total",
+          description: "updated this campaign",
+          timestamp: new Date(Date.now() - 7 * 60 * 1000).toISOString(),
+          details: { "Campaign spend total": "$323" }
+        }
+      ],
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     }

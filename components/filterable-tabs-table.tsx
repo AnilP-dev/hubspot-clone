@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import type React from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -21,12 +22,14 @@ import {
   Undo,
   List
 } from "lucide-react"
+import SearchableDropdown from "./ui/searchable-dropdown"
 
 interface TabData {
   id: string
   name: string
   isDefault?: boolean
   filters?: Record<string, any>
+  icon ? : React.ReactNode
 }
 
 interface Column {
@@ -34,6 +37,13 @@ interface Column {
   label: string
   sortable?: boolean
   info?: boolean
+  render?: (row: any) => React.ReactNode
+}
+
+interface MenuItem {
+  name: string
+  values: string[]
+  defaultValue?: string
 }
 
 interface FilterableTabsTableProps {
@@ -49,6 +59,10 @@ interface FilterableTabsTableProps {
   searchPlaceholder?: string
   maxViews?: number
   currentViews?: number
+  onLinkClick?: (rowId: string, columnKey: string) => void
+  linkColumnKeys?: string[]
+  menuItems?: MenuItem[]
+  rightHeaderActions?: React.ReactNode
 }
 
 export function FilterableTabsTable({
@@ -61,9 +75,13 @@ export function FilterableTabsTable({
   onDataFilter,
   onCampaignClick,
   onDelete,
-  searchPlaceholder = "Search campaigns",
+  searchPlaceholder = "Search",
   maxViews = 50,
-  currentViews = 3
+  currentViews = 3,
+  onLinkClick,
+  linkColumnKeys,
+  menuItems = [],
+  rightHeaderActions,
 }: FilterableTabsTableProps) {
   const [activeTab, setActiveTab] = useState(tabs[0]?.id || '')
   const [searchTerm, setSearchTerm] = useState("")
@@ -123,6 +141,7 @@ export function FilterableTabsTable({
     setDraggedTab(null)
   }
 
+  console.log(tabs)
   return (
     <div className="rounded-lg">
       {/* Tabs Header */}
@@ -144,13 +163,14 @@ export function FilterableTabsTable({
                 onDrop={(e) => handleDrop(e, tab.id)}
                 onClick={() => setActiveTab(tab.id)}
               >
-                <span className="text-sm font-light text-sm">{tab.name}</span>
+                {tab.icon}
+                <span className="text-sm font-light">{tab.name}</span>
                   <button
                     onClick={(e) => {
                       e.stopPropagation()
                       handleTabClose(tab.id)
                     }}
-                    className="ml-2 p-0.5 hover:bg-gray-200 rounded ml-auto"
+                    className="p-0.5 hover:bg-gray-200 rounded ml-auto"
                   >
                     <X className="h-3 w-3 text-gray-400" />
                   </button>
@@ -181,17 +201,11 @@ export function FilterableTabsTable({
       {/* Filters Section */}
       <div className="pt-4 bg-white border border-hubspot-view-tab-border-color border-t-0">
         <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3 font-bold">
-            <Select defaultValue="campaign-owner">
-              <SelectTrigger className="focus-visible:outline-none focus-visible:!ring-0 focus-visible:!ring-offset-0 w-40 bg-white font-bold border-gray-300 text-hubspot-secondary border-0">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="text-hubspot-primary">
-                <SelectItem value="campaign-owner">Campaign owner</SelectItem>
-                <SelectItem value="owner-1">Owner 1</SelectItem>
-                <SelectItem value="owner-2">Owner 2</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="flex items-center gap-1 font-bold">
+            {/* Dynamic Menu Items */}
+            {menuItems.map((menuItem, index) => (
+              <SearchableDropdown name={menuItem.name} items={menuItem.values} />
+            ))}
 
             <button className="flex items-center gap-2 text-hubspot-secondary hover:text-teal-700 text-sm font-bold">
               <Plus className="h-4 w-4" />
@@ -220,7 +234,7 @@ export function FilterableTabsTable({
         {/* Search Bar */}
         <div className="flex justify-between bg-inactive-background border border-hubspot-view-tab-border-color py-2 px-4 pl-2 mr-0 ml-0">
           <div className="flex items-center gap-4 w-full">
-            <div className="relative w-[20%] h-15">
+            <div className="relative w-[25%] h-15">
               <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <Input
                 placeholder={searchPlaceholder}
@@ -263,10 +277,13 @@ export function FilterableTabsTable({
           </div>
           
           {/* Actions Bar */}
-          <Button variant="outline" size="sm" className="h-8 rounded-xs text-gray-600 border-gray-300 text-xs font-light">
-            Actions
-            <ChevronDown className="h-2 w-2 ml-0" />
-          </Button>
+          {rightHeaderActions}
+          {/* 
+            <Button variant="outline" size="sm" className="h-8 rounded-xs text-gray-600 border-gray-300 text-xs font-light">
+              Actions
+              <ChevronDown className="h-2 w-2 ml-0" />
+            </Button> 
+          */}
         </div>
         </div>
 
@@ -309,11 +326,16 @@ export function FilterableTabsTable({
                 </TableCell>
                 {columns.map((column) => (
                   <TableCell key={column.key} className="px-0 pl-4 text-left py-2 text-hubspot-table-header-color text-sm border border-t-0 bg-white border-hubspot-view-tab-border-color">
-                    {column.key === 'name' || column.key === 'campaignName' ? (
+                    {column.render ? (
+                      column.render(row)
+                    ) : linkColumnKeys?.includes(column.key) ? (
                       <div>
                         <span 
                           className="text-hubspot-secondary hover:underline cursor-pointer font-semibold"
-                          onClick={() => onCampaignClick && onCampaignClick(row.id)}
+                          onClick={() => {
+                            if (onLinkClick) return onLinkClick(row.id, column.key)
+                            if (onCampaignClick) return onCampaignClick(row.id)
+                          }}
                         >
                           {row[column.key]}
                         </span>

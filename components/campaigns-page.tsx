@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button"
 import { ChevronDown, BarChart3 } from "lucide-react"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { FilterableTabsTable } from "@/components/filterable-tabs-table"
-import { CampaignSelectionSidebar } from "@/components/campaign-selection-sidebar"
+import { SelectionSidebar, type SelectionOption } from "@/components/selection-sidebar"
 import { CampaignCreationFormSidebar } from "@/components/campaign-creation-form-sidebar"
 
 interface TabData {
@@ -45,20 +45,35 @@ export function CampaignsPage() {
     { key: 'name', label: 'Campaign Name', sortable: true, info: true },
     { key: 'owner', label: 'Campaign Owner', sortable: true, info: true },
     { key: 'comments', label: 'Comments', sortable: true, info: true },
-    { key: 'createdAt', label: 'Created On (GMT+5:30)', sortable: true, info: true }
+    { key: 'createdAt', label: 'Created On (GMT+5:30)', sortable: true, info: true },
+    { key: 'notes', label: 'Campaign Notes', sortable: true, info: true },
+    { key: 'startDate', label: 'Campaign Start Date', sortable: true, info: true },
+    { key: 'endDate', label: 'Campaign End Date', sortable: true, info: true }
   ]
 
   // Transform campaigns data for the table
   const tableData = campaigns.map(campaign => ({
     id: campaign.id,
-    name: campaign.name,
-    owner: campaign.owner,
+    name: (
+      <button
+        className="text-hubspot-secondary hover:underline font-medium text-left"
+        onClick={() => router.push(`/marketing/campaigns/${campaign.id}`)}
+      >
+        {campaign.name}
+      </button>
+    ),
+    owner: campaign.owner || 'No owner',
     comments: campaign.assets.length,
     createdAt: new Date(campaign.createdAt).toLocaleDateString('en-US', { 
       year: 'numeric', 
       month: 'long', 
       day: 'numeric' 
-    })
+    }),
+    notes: campaign.notes ? 
+      (campaign.notes.length > 50 ? `${campaign.notes.substring(0, 50)}...` : campaign.notes) : 
+      '—',
+    startDate: campaign.startDate ? new Date(campaign.startDate).toLocaleDateString('en-US') : '—',
+    endDate: campaign.endDate ? new Date(campaign.endDate).toLocaleDateString('en-US') : '—'
   }))
 
   const handleNextToForm = () => {
@@ -111,6 +126,39 @@ export function CampaignsPage() {
       }
     }
   }
+
+  const selectionOptions: SelectionOption[] = [
+    {
+      id: "scratch",
+      title: "Start from scratch",
+      description: "Start with a blank campaign. Add your information, goals and marketing assets.",
+      icon: (
+        <div className="w-20 h-20 rounded-lg flex items-center justify-center ">
+          <img 
+            src="https://static.hsappstatic.net/ui-images/static-2.820/optimized/canvas/building.svg" 
+            alt="Start from scratch"
+            className="w-full h-full"
+          />
+        </div>
+      ),
+      badge: null
+    },
+    {
+      id: "template",
+      title: "Start from template",
+      description: "Get guidance with a template that's based on your campaign's goal.",
+      icon: (
+        <div className="w-20 h-20 rounded-lg flex items-center justify-center ">
+          <img 
+            src="https://static.hsappstatic.net/ui-images/static-2.820/optimized/canvas/marketing-templates.svg" 
+            alt="Start from template"
+            className="w-full h-full"
+          />
+        </div>
+      ),
+      badge: "BETA"
+    }
+  ]
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
@@ -180,6 +228,22 @@ export function CampaignsPage() {
               searchPlaceholder="Search campaigns"
               maxViews={50}
               currentViews={tabs.length}
+              menuItems={[
+                {
+                  name: "Campaign owner",
+                  values: ["Campaign owner", "Owner 1", "Owner 2", "All owners"],
+                  defaultValue: "Campaign owner"
+                }
+              ]}
+              rightHeaderActions={
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" className="h-8 rounded-xs text-gray-600 border-gray-300 text-xs font-light rounded-sm">
+                    {/* <Download className="h-4 w-4 mr-1" /> */}
+                      Actions
+                    <ChevronDown className="h-2 w-2 ml-0" />
+                  </Button>
+                </div>
+              }
             />
           </TabsContent>
 
@@ -197,11 +261,13 @@ export function CampaignsPage() {
         </Tabs>
       </div>
 
-      {/* Campaign Selection Sidebar */}
-      <CampaignSelectionSidebar
+      {/* Generic Selection Sidebar for Campaigns */}
+      <SelectionSidebar
         isOpen={isSidebarOpen}
         onClose={handleCloseSidebars}
         onNext={handleNextToForm}
+        title="Select a campaign"
+        options={selectionOptions}
       />
 
       {/* Campaign Creation Form Sidebar */}

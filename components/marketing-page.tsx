@@ -32,7 +32,7 @@ const marketingTools = [
     icon: Mail,
     href: "/marketing/email", 
     color: "bg-blue-500",
-    comingSoon: true,
+    comingSoon: false,
   },
   {
     title: "Social",

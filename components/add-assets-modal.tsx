@@ -1,8 +1,12 @@
 "use client"
 
-import { useState } from "react"
-import { useDispatch } from "react-redux"
-import { addAssetsToCampaign } from "@/lib/store/slices/campaignsSlice"
+import { useState, useEffect } from "react"
+import * as React from "react"
+import { useDispatch, useSelector } from "react-redux"
+import { useRouter } from "next/navigation"
+import { addAssetsToCampaign, addActivity, type Activity } from "@/lib/store/slices/campaignsSlice"
+import { setEmails } from "@/lib/store/slices/emailsSlice"
+import { RootState } from "@/lib/store"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { X, Search, ChevronDown, ChevronRight } from "lucide-react"
@@ -16,6 +20,8 @@ interface AddAssetsModalProps {
 
 export function AddAssetsModal({ isOpen, onClose, campaignName, campaignId }: AddAssetsModalProps) {
   const dispatch = useDispatch()
+  const router = useRouter()
+  const emails = useSelector((state: RootState) => state.emails.emails)
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedAssets, setSelectedAssets] = useState<string[]>([])
   const [expandedCategories, setExpandedCategories] = useState({
@@ -27,6 +33,24 @@ export function AddAssetsModal({ isOpen, onClose, campaignName, campaignId }: Ad
     sales: false,
     library: false
   })
+
+  // Reset search term and refresh data when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      setSearchTerm("")
+      // Force refresh of emails from localStorage to get latest data from other tabs
+      const storedEmails = localStorage.getItem('emails')
+      if (storedEmails) {
+        try {
+          const parsedEmails = JSON.parse(storedEmails)
+          // Dispatch to update current Redux store with latest emails
+          dispatch(setEmails(parsedEmails))
+        } catch (error) {
+          console.error('Error parsing emails from localStorage:', error)
+        }
+      }
+    }
+  }, [isOpen])
 
   if (!isOpen) return null
 
@@ -49,14 +73,14 @@ export function AddAssetsModal({ isOpen, onClose, campaignName, campaignId }: Ad
     if (!campaignId || selectedAssets.length === 0) return
 
     // Convert selected asset IDs to asset objects
-    const assetsToAdd = emails
+    const assetsToAdd = filteredEmails
       .filter(email => selectedAssets.includes(email.id))
       .map(email => ({
         id: email.id,
         name: email.name,
-        type: email.type,
-        status: email.status,
-        updatedAt: email.updatedAt
+        type: email.type === 'marketing' ? 'Regular' : email.type,
+        status: email.status.charAt(0).toUpperCase() + email.status.slice(1),
+        updatedAt: email.lastUpdatedAt
       }))
 
     // Dispatch to Redux store
@@ -65,9 +89,35 @@ export function AddAssetsModal({ isOpen, onClose, campaignName, campaignId }: Ad
       assets: assetsToAdd
     }))
 
+    // Log activity for each added asset
+    assetsToAdd.forEach(asset => {
+      const activity: Activity = {
+        id: `activity-${Date.now()}-${asset.id}`,
+        campaignId: campaignId,
+        userId: "user-current",
+        userName: "Rituparn Gehlot",
+        action: "added",
+        entityType: "marketing_email",
+        entityName: asset.name,
+        entityId: asset.id,
+        description: `added the marketing email ${asset.name} to this campaign`,
+        timestamp: new Date().toISOString()
+      }
+
+      dispatch(addActivity({
+        campaignId: campaignId,
+        activity: activity
+      }))
+    })
+
     // Reset selected assets and close modal
     setSelectedAssets([])
     onClose()
+  }
+
+  const handleCreateEmail = () => {
+    // Open email list page in new tab
+    window.open('/marketing/email', '_blank')
   }
 
   const marketingAssets = [
@@ -103,15 +153,16 @@ export function AddAssetsModal({ isOpen, onClose, campaignName, campaignId }: Ad
     { id: "tracking-urls", name: "Tracking URLs" }
   ]
 
-  const emails = [
-    {
-      id: "new-email",
-      name: "New email",
-      type: "Regular",
-      status: "Draft",
-      updatedAt: "August 6, 2025"
-    }
-  ]
+  // Filter emails based on search term
+  const filteredEmails = emails.filter(email => 
+    email.name.toLowerCase().includes(searchTerm.toLowerCase())
+  )
+
+  // Debug logging
+  console.log('AddAssetsModal - Total emails:', emails.length)
+  console.log('AddAssetsModal - Emails data:', emails)
+  console.log('AddAssetsModal - Filtered emails:', filteredEmails.length)
+  console.log('AddAssetsModal - Search term:', searchTerm)
 
   return (
     <>
@@ -122,7 +173,7 @@ export function AddAssetsModal({ isOpen, onClose, campaignName, campaignId }: Ad
       />
       
       {/* Modal */}
-      <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
+      <div className="fixed inset-0 z-[1001] flex items-center justify-center p-4">
         <div className="bg-white rounded-lg shadow-xl w-[80vw] h-[90vh] flex flex-col">
           {/* Header */}
           <div className="hubspot-gradient-header flex items-center justify-between p-6 border-b border-gray-200">
@@ -179,7 +230,7 @@ export function AddAssetsModal({ isOpen, onClose, campaignName, campaignId }: Ad
                           key={asset.id}
                           className={`flex items-center gap-2 py-1 px-2 text-sm rounded cursor-pointer ${
                             asset.id === "marketing-emails"
-                              ? "bg-blue-50 text-blue-700 font-medium"
+                              ? "bg-blue-50 text-hubspot-secondary font-medium"
                               : "text-gray-700 hover:bg-gray-50"
                           }`}
                         >
@@ -293,9 +344,10 @@ export function AddAssetsModal({ isOpen, onClose, campaignName, campaignId }: Ad
               {/* Content Header */}
               <div className="p-6 border-b border-gray-200">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-gray-900">Marketing Emails</h3>
+                  <h3 className="text-lg font-semibold text-gray-900">Marketing Emails ({filteredEmails.length})</h3>
                   <Button 
-                    className="text-white text-sm"
+                    onClick={handleCreateEmail}
+                    className="text-white text-sm hover:opacity-90"
                     style={{ backgroundColor: 'rgb(66, 91, 118)' }}
                   >
                     Create email
@@ -327,33 +379,44 @@ export function AddAssetsModal({ isOpen, onClose, campaignName, campaignId }: Ad
                   </div>
 
                   {/* Email Rows */}
-                  {emails.map((email) => (
-                    <div key={email.id} className="grid grid-cols-12 gap-4 py-4 border-b border-gray-100">
-                      <div className="col-span-1">
-                        <input
-                          type="checkbox"
-                          checked={selectedAssets.includes(email.id)}
-                          onChange={() => toggleAssetSelection(email.id)}
-                          className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                        />
-                      </div>
-                      <div className="col-span-4">
-                        <span className="text-gray-900 font-medium">{email.name}</span>
-                      </div>
-                      <div className="col-span-2">
-                        <span className="text-gray-600">{email.type}</span>
-                      </div>
-                      <div className="col-span-2">
-                        <div className="flex items-center gap-2">
-                          <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
-                          <span className="text-gray-600">{email.status}</span>
+                  {filteredEmails.length === 0 ? (
+                    <div className="py-8 text-center text-gray-500">
+                      {searchTerm ? 'No emails match your search' : 'No emails available'}
+                    </div>
+                  ) : (
+                    filteredEmails.map((email) => (
+                      <div key={email.id} className="grid grid-cols-12 gap-4 py-4 border-b border-gray-100">
+                        <div className="col-span-1">
+                          <input
+                            type="checkbox"
+                            checked={selectedAssets.includes(email.id)}
+                            onChange={() => toggleAssetSelection(email.id)}
+                            className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                          />
+                        </div>
+                        <div className="col-span-4">
+                          <span className="text-gray-900 font-medium">{email.name}</span>
+                        </div>
+                        <div className="col-span-2">
+                          <span className="text-gray-600">{email.type === 'marketing' ? 'Regular' : email.type}</span>
+                        </div>
+                        <div className="col-span-2">
+                          <div className="flex items-center gap-2">
+                            <div className={`w-2 h-2 rounded-full ${
+                              email.status === 'draft' ? 'bg-gray-400' :
+                              email.status === 'sent' ? 'bg-green-400' :
+                              email.status === 'scheduled' ? 'bg-yellow-400' :
+                              'bg-gray-400'
+                            }`}></div>
+                            <span className="text-gray-600 capitalize">{email.status}</span>
+                          </div>
+                        </div>
+                        <div className="col-span-3">
+                          <span className="text-gray-600">{email.lastUpdatedAt}</span>
                         </div>
                       </div>
-                      <div className="col-span-3">
-                        <span className="text-gray-600">{email.updatedAt}</span>
-                      </div>
-                    </div>
-                  ))}
+                    ))
+                  )}
                 </div>
               </div>
 
@@ -361,11 +424,11 @@ export function AddAssetsModal({ isOpen, onClose, campaignName, campaignId }: Ad
               <div className="p-6 border-t border-gray-200">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <button className="px-2 py-1 text-blue-600 hover:bg-blue-50 rounded">First</button>
-                    <button className="px-2 py-1 text-blue-600 hover:bg-blue-50 rounded">Prev</button>
-                    <span className="px-3 py-1 bg-blue-600 text-white rounded">1</span>
-                    <button className="px-2 py-1 text-blue-600 hover:bg-blue-50 rounded">Next</button>
-                    <button className="px-2 py-1 text-blue-600 hover:bg-blue-50 rounded">Last</button>
+                    <button className="px-2 py-1 text-hubspot-secondary hover:bg-blue-50 rounded">First</button>
+                    <button className="px-2 py-1 text-hubspot-secondary hover:bg-blue-50 rounded">Prev</button>
+                    <span className="px-3 py-1 bg-hubspot-secondary text-white rounded">1</span>
+                    <button className="px-2 py-1 text-hubspot-secondary hover:bg-blue-50 rounded">Next</button>
+                    <button className="px-2 py-1 text-hubspot-secondary hover:bg-blue-50 rounded">Last</button>
                   </div>
                 </div>
               </div>

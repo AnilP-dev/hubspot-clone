@@ -10,6 +10,7 @@ import playbooksReducer from "./slices/playbooksSlice"
 import messageTemplatesReducer from "./slices/messageTemplatesSlice"
 import snippetsReducer from "./slices/snippetsSlice"
 import campaignsReducer from './slices/campaignsSlice';
+import emailsReducer from './slices/emailsSlice';
 
 export const store = configureStore({
   reducer: {
@@ -23,7 +24,8 @@ export const store = configureStore({
     playbooks: playbooksReducer,
     messageTemplates: messageTemplatesReducer,
     snippets: snippetsReducer,
-    campaigns : campaignsReducer
+    campaigns : campaignsReducer,
+    emails: emailsReducer
   },
 })
 
