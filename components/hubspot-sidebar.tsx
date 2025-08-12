@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import {
@@ -30,6 +30,16 @@ import {
   Users2,
   BarChart,
   Settings,
+  Megaphone,
+  Share2,
+  Calendar,
+  FileForm,
+  MousePointer,
+  Smartphone,
+  UserCheck,
+  Trophy,
+  Route,
+  Menu,
 } from "lucide-react"
 
 const navigationItems = [
@@ -64,8 +74,21 @@ const navigationItems = [
     id: "marketing",
     title: "Marketing",
     icon: TrendingUp,
-    href: "/marketing",
-    disabled: true,
+    isExpandable: true,
+    disabled: false,
+    items: [
+      { title: "Campaigns", href: "/marketing/campaigns", icon: Megaphone },
+      { title: "Email", href: "/marketing/email", icon: Mail },
+      { title: "Social", href: "/marketing/social", icon: Share2 },
+      { title: "Ads", href: "/marketing/ads", icon: Target },
+      { title: "Events", href: "/marketing/events", icon: Calendar },
+      { title: "Forms", href: "/marketing/forms", icon: Calendar },
+      { title: "CTAs", href: "/marketing/ctas", icon: MousePointer },
+      { title: "SMS", href: "/marketing/sms", icon: Smartphone, hasNotification: true },
+      { title: "Buyer Intent", href: "/marketing/buyer-intent", icon: UserCheck },
+      { title: "Lead Scoring", href: "/marketing/lead-scoring", icon: Trophy },
+      { title: "Journeys", href: "/marketing/journeys", icon: Route, badge: "BETA" },
+    ],
   },
   {
     id: "content",
@@ -153,7 +176,43 @@ interface HubSpotSidebarProps {
 
 export function HubSpotSidebar({ isExpanded, onToggle }: HubSpotSidebarProps) {
   const pathname = usePathname()
-  const [expandedSections, setExpandedSections] = useState<string[]>(["crm"])
+
+  // Helper function to determine which parent module should be active
+  const getActiveModule = (pathname: string) => {
+    if (pathname.startsWith("/crm")) return "crm"
+    if (pathname.startsWith("/marketing")) return "marketing"
+    if (pathname.startsWith("/content")) return "content"
+    if (pathname.startsWith("/sales")) return "sales"
+    if (pathname.startsWith("/commerce")) return "commerce"
+    if (pathname.startsWith("/service")) return "service"
+    if (pathname.startsWith("/data")) return "data"
+    if (pathname.startsWith("/automation")) return "automation"
+    if (pathname.startsWith("/reporting")) return "reporting"
+    if (pathname.startsWith("/contacts-2")) return "contacts-2"
+    if (pathname.startsWith("/analytics")) return "analytics"
+    if (pathname.startsWith("/settings")) return "settings"
+    if (pathname.startsWith("/add")) return "add"
+    if (pathname.startsWith("/bookmarks")) return "bookmarks"
+    return null
+  }
+
+  const activeModule = getActiveModule(pathname)
+  
+  // Initialize expanded sections with the active module
+  const [expandedSections, setExpandedSections] = useState<string[]>(() => {
+    return activeModule ? [activeModule] : ["crm"]
+  })
+
+  // Update expanded sections when pathname changes
+  useEffect(() => {
+    if (activeModule && !expandedSections.includes(activeModule)) {
+      setExpandedSections(prev => {
+        // Remove other expanded sections and add the active one
+        const otherSections = prev.filter(section => section !== activeModule)
+        return [...otherSections, activeModule]
+      })
+    }
+  }, [activeModule, expandedSections])
 
   const toggleSection = (sectionId: string) => {
     if (!isExpanded) {
@@ -196,13 +255,22 @@ export function HubSpotSidebar({ isExpanded, onToggle }: HubSpotSidebarProps) {
           </svg>
         </div>
         <span className="hubspot-brand-text">HubSpot</span>
+        {isExpanded && (
+          <button 
+            onClick={onToggle} 
+            className="hubspot-hamburger-btn"
+            title="Collapse sidebar"
+          >
+            <Menu className="w-4 h-4" />
+          </button>
+        )}
       </div>
 
       {/* Content */}
       <div className="hubspot-sidebar-content">
         {/* Bookmarks Section */}
         <div className="hubspot-nav-section">
-          <div className={`hubspot-nav-item ${pathname === "/bookmarks" ? "active" : ""} ${navigationItems[0].disabled ? "disabled" : ""}`}>
+          <div className={`hubspot-nav-item ${activeModule === "bookmarks" ? "active" : ""} ${navigationItems[0].disabled ? "disabled" : ""}`}>
             <Bookmark className="hubspot-nav-icon" />
             <span className="hubspot-nav-text">Bookmarks</span>
             {navigationItems[0].disabled && (
@@ -219,7 +287,7 @@ export function HubSpotSidebar({ isExpanded, onToggle }: HubSpotSidebarProps) {
                 <>
                   <button
                     onClick={() => handleItemClick(item)}
-                    className={`hubspot-nav-item expandable ${pathname.startsWith("/crm") ? "active" : ""} ${item.disabled ? "disabled" : ""}`}
+                    className={`hubspot-nav-item expandable ${activeModule === item.id ? "active" : ""} ${item.disabled ? "disabled" : ""}`}
                     disabled={item.disabled}
                   >
                     <div style={{ display: "flex", alignItems: "center" }}>
@@ -239,15 +307,24 @@ export function HubSpotSidebar({ isExpanded, onToggle }: HubSpotSidebarProps) {
                         href={subItem.href}
                         className={`hubspot-submenu-item ${pathname === subItem.href ? "active" : ""}`}
                       >
-                        <subItem.icon className="hubspot-submenu-icon" />
-                        <span>{subItem.title}</span>
-                        {subItem.hasNotification && <div className="hubspot-notification-dot"></div>}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                          <subItem.icon className="hubspot-submenu-icon" />
+                          <span>{subItem.title}</span>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          {subItem.hasNotification && <div className="hubspot-notification-dot"></div>}
+                          {subItem.badge && (
+                            <span className="hubspot-beta-badge">
+                              {subItem.badge}
+                            </span>
+                          )}
+                        </div>
                       </Link>
                     ))}
                   </div>
                 </>
               ) : (
-                <div className={`hubspot-nav-item ${pathname === item.href ? "active" : ""} ${item.disabled ? "disabled" : ""}`}>
+                <div className={`hubspot-nav-item ${activeModule === item.id ? "active" : ""} ${item.disabled ? "disabled" : ""}`}>
                   <item.icon className="hubspot-nav-icon" />
                   <span className="hubspot-nav-text">{item.title}</span>
                   {item.disabled && (

@@ -62,7 +62,21 @@ const config: Config = {
   				'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
   				border: 'hsl(var(--sidebar-border))',
   				ring: 'hsl(var(--sidebar-ring))'
-  			}
+  			},
+  			// HubSpot Colors
+  			'hubspot-primary': '#33475b',
+  			'inactive-background': '#F5F8FA',
+			'hubspot-secondary' : 'rgb(20, 155, 182)',
+  			'hubspot-teal': '#00a4bd',
+  			'hubspot-orange': '#ff7a59',
+  			'hubspot-red': '#e53e3e',
+			'hubspot-view-tab-border-color' : '#CBD6E2',
+			'hubspot-inset-ring-color' : '#00a4bd',
+			'hubspot-table-header-color' : 'rgb(51, 71, 91)',
+			'hubspot-cell-focused-color' : 'rgb(229, 245, 248)',
+			'hubspot-tertiary-color' : 'rgb(234, 240, 246)',
+			'hubspot-tertiary-text-color' : 'rgb(81, 111, 144)'
+
   		},
   		borderRadius: {
   			lg: 'var(--radius)',
